@@ -1,0 +1,34 @@
+* S#
+
+school assignment. toy ("S#") syntax to c-syntax transpilation.
+
+- disclaimers ::
+  - assignment is incomplete
+    - binary operation does not repeat, ie. "u + v + w" fails
+    - parsing is quite buggy
+    - gives no output
+      - must complete parsing first
+    - does not recognise user input
+      - only recognises "test" variable in main()
+  - documentation (comments) is somewhat haphazard
+  - no automated testing implemented
+  - at time of submission, *submit branch* frozen @ 05 jan 2019
+
+- code structure ::
+  - outline
+    1. transpile starts: main(), "test" string
+    1. test string is lexed: lex()
+    1. lexed tokens are parsed: parse()
+    1. parse() refers to various parse_*(), the results of which accumulate in a global variable.
+    1. the global accumulation variable is traversed and printed accordingly: out()
+  - *./makefile*
+    - build: =make=
+    - clean: =make clean=
+    - run: =./transpile= or =make run=
+  - *./main.cpp*
+    - single file containing all of source
+
+- further implementation notes ::
+  - a recursive descent parser has been attempted
+  - the Transpiler.grammar variable does not work as intended; it aims to inform a main recursive "parsing" function, but currently, the "grammar" has instead been hardcoded into parse_*() functions.
+  - please use the DEBUG macro and the test string to try out the incomplete transpiler.
