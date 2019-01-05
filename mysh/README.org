@@ -6,13 +6,13 @@ basic linux shell. school project.
 
 - code structure ::
   - outline
-    1. mysh starts: main()
-    1. "mode" of the shell is determined: main(), opt(), loop()
-    1. repl starts: loop(), loop_body()
-    1. input is read, variation depending on mode: loop(), get()
-    1. read input is parsed into tokens: parse()
-    1. tokens are evaluated: eval()
-    1. next iteration of repl is readied: rinse()
+    1. mysh starts: [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/main.c#L13][main()]]
+    1. "mode" of the shell is determined: [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/main.c#L13][main()]], [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L565][opt()]], [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L445][loop()]]
+    1. repl starts: [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L445][loop()]], [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L410][loop_body()]]
+    1. input is read, variation depending on mode: [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L445][loop()]], [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L192][get()]]
+    1. read input is parsed into tokens: [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L226][parse()]]
+    1. tokens are evaluated: [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L309][eval()]]
+    1. next iteration of repl is readied: [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L378][rinse()]]
   - *./(mff/mysh/)makefile*
     - first =cd mff/mysh=
     - build: =make=
@@ -34,25 +34,25 @@ basic linux shell. school project.
   - testing: coverage incomplete, partially failing on lab computers
 
 - phase 1 requirements ::
-  - due 13 jan 2019
-  - :-D honor PATH of parent shell
-  - :-| handle ^C to kill foreground process (requires 2 ^C's)
-  - :-D handle empty input lines
-  - :-D impl. simple foreground execution: (parse(), eval())
-  - :-D handle semicolon syntax: (syntactic check, parsing)
-  - :-D impl. exit
-  - :-D handle ^D
-  - :-D impl. cd
-  - :-D handle -c option mode
-  - :-D handle comments
-  - :-D impl. non-interactive (ie. file) mode
-  - :-D yield return value of last command executed
-  - :-D return value of unknown command is 127
-  - :-D direct err/warn messages to stderr
+  - due 13 jan 2019 (*[[https://github.com/agarick/mff/tree/nswi015_mysh_phase1/mysh][phase1 branch]]* frozen @ 05 jan 2019 [[https://github.com/agarick/shell/commit/5dc7b7e3fea1e26b75b43a44bd6f1f4a74d9947c][5dc7b7e3fe]])
+  - :-D [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L358][honor PATH of parent shell]]
+  - :-| [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L457][handle ^C to kill foreground process]] (requires 2 ^C's)
+  - :-D [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L214][handle empty input lines]]
+  - :-D impl. simple foreground execution: ([[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L226][parse()]], [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L309][eval()]])
+  - :-D handle semicolon syntax: ([[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L242][syntactic check]], [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L266][parsing]])
+  - :-D [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L218][impl. exit]]
+  - :-D [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L209][handle ^D]]
+  - :-D [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L126][impl. cd]]
+  - :-D [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/main.c#L31][handle -c option mode]]
+  - :-D [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L259][handle comments]]
+  - :-D [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/main.c#L37][impl. non-interactive (ie. file) mode]]
+  - :-D [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L28][yield return value of last command executed]]
+  - :-D [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.h#L23][return value of unknown command is 127]]
+  - :-D [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.h#L12][direct err/warn messages to stderr]]
   - :-( return value of signalled command is 128
-  - :-D show cwd in prompt
-  - :-D do not use fopen() family functions: (read(), el_gets())
-  - :-D do not use functions that fork() within
+  - :-D [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L97][show cwd in prompt]]
+  - :-D do not use fopen() family functions: ([[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L504][read()]], [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L202][el_gets()]])
+  - :-D do not use functions that [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L350][fork()]] within
   - :-D should work on lab computers (but tests fail)
   - :-( check for mm issues using valgrind (libcursesw, libedit giving trouble)
 
