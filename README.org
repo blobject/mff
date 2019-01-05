@@ -1,6 +1,7 @@
-* uk mff
+* mff uk
 
 - nprg041 ::
+  - *[[https://github.com/agarick/deck/tree/master/cpp][deck]]*
   - *[[ssharp][ssharp]]*: [[https://github.com/agarick/mff/tree/nprg041_ssharp_submit/ssharp][submit]]
 
 - nswi015 ::
