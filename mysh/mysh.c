@@ -567,8 +567,8 @@ eh_end(struct eh* eh)
  * - Handle mysh arguments using getopt.
  * - Currently only handles "-c".
  */
-char*
-opt(int argc, char** argv)
+int
+opt(int argc, char** argv, char** line)
 {
     int c;
     while ((c = getopt(argc, argv, "c:")) != -1)
@@ -576,10 +576,12 @@ opt(int argc, char** argv)
         switch (c)
         {
         case 'c':
-            return optarg;
+            *line = strdup(optarg);
             break;
+        default:
+            return -1;
         }
     }
-    return NULL;
+    return 0;
 }
 

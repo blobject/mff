@@ -18,6 +18,7 @@ extern int LASTOK;
 int
 main(int argc, char** argv)
 {
+    int ok;
     char* line;
     struct eh* eh = eh_init(argv[0]);
 
@@ -29,9 +30,13 @@ main(int argc, char** argv)
     }
 
     /* -c */
-    else if ((line = opt(argc, argv)))
+    else if ((ok = opt(argc, argv, &line)) == 0)
     {
         loop(eh, 1, line);
+    }
+    else if (ok < 0)
+    {
+        return ERR_ARG; // getopt() prints its own err msg
     }
 
     /* file */

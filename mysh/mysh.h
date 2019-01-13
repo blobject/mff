@@ -82,5 +82,5 @@ char* bye(int b);
 int cd(char** a, int n);
 int parse(char* l, struct lltok* t);
 void loop(struct eh* e, int t, const char* l);
-char* opt(int c, char** a);
+int opt(int c, char** a, char** l);
 
