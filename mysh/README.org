@@ -34,7 +34,7 @@ basic linux shell. school project.
   - testing: coverage incomplete, partially failing on lab computers
 
 - phase 1 requirements ::
-  - due 13 jan 2019 (*[[https://github.com/agarick/mff/tree/nswi015_mysh_phase1/mysh][phase1 branch]]* frozen @ 05 jan 2019 [[https://github.com/agarick/shell/commit/5dc7b7e3fea1e26b75b43a44bd6f1f4a74d9947c][5dc7b7e3fe]])
+  - due 13 jan 2019 (*[[https://github.com/agarick/mff/tree/nswi015_mysh_phase1/mysh][phase1 branch]]* frozen @ 13 jan 2019 [[https://github.com/agarick/mff/commit/5baf9218b5a2a9709ebd8f2e7ba0108518b465e9][5baf9218b5]])
   - :-D [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L358][honor PATH of parent shell]]
   - :-| [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L457][handle ^C to kill foreground process]] (requires 2 ^C's)
   - :-D [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L214][handle empty input lines]]
