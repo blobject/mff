@@ -26,13 +26,13 @@ main(int argc, char** argv)
     if (argc == 1)
     {
         printf("%s\n\n", motd());
-        loop(eh, 0, NULL); // return value unused
+        loop(eh, LOOP_STDIN, NULL); // return value unused
     }
 
     /* -c */
     else if ((ok = opt(argc, argv, &line)) == 0)
     {
-        loop(eh, 1, line); // return value unused
+        loop(eh, LOOP_ARG, line); // return value unused
     }
     else if (ok < 0)
     {
@@ -52,7 +52,7 @@ main(int argc, char** argv)
             warnx("file nonexistent");
             LASTOK = ERR_FNE;
         }
-        loop(eh, 2, argv[1]); // return value unused
+        loop(eh, LOOP_FILE, argv[1]); // return value unused
     }
 
     eh_end(eh);

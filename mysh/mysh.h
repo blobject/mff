@@ -24,6 +24,16 @@
 #define ERR_SYN  254
 
 ////////////////////////////////////////////////////////////////////////
+// enums
+
+enum loop_type
+{
+    LOOP_STDIN,
+    LOOP_ARG,
+    LOOP_FILE
+};
+
+////////////////////////////////////////////////////////////////////////
 // structs
 // - Currently, "ltok" and "lltok" are rather superfluous, as they serve
 //   no other purpose than to store split strings.
@@ -81,6 +91,6 @@ char* prompt(void);
 char* bye(int b);
 int cd(char** a, int n);
 int parse(char* l, struct lltok* t);
-int loop(struct eh* e, int t, const char* l);
+int loop(struct eh* e, enum loop_type t, const char* l);
 int opt(int c, char** a, char** l);
 

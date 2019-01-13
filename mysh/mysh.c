@@ -483,7 +483,7 @@ loop_body(struct eh* eh, const char* line)
  * - Handle stdin/arg/file variability.
  */
 int
-loop(struct eh* eh, int loop_type, const char* line_or_file)
+loop(struct eh* eh, enum loop_type t, const char* line_or_file)
 {
     struct sigaction sa;
     sa.sa_handler = sigint_handler;
@@ -499,11 +499,10 @@ loop(struct eh* eh, int loop_type, const char* line_or_file)
     char readbuf[LIM];
     int readcount = 0;
 
-    switch (loop_type)
+    switch (t)
     {
 
-    /* stdin */
-    case 0:
+    case LOOP_STDIN:
         for (;;)
         {
             if ((ok = get(&line, eh->editline, &getcount)) < 0)
@@ -525,16 +524,14 @@ loop(struct eh* eh, int loop_type, const char* line_or_file)
         }
         break;
 
-    /* -c */
-    case 1:
+    case LOOP_ARG:
         if (loop_body(eh, line_or_file) != 0)
         {
             return ERR_FAIL;
         }
         break;
 
-    /* file */
-    case 2:
+    case LOOP_FILE:
         if ((file = open(line_or_file, O_RDONLY)) < 0)
         {
             warnx("file read error");
