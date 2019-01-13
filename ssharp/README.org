@@ -1,6 +1,6 @@
 * S#
 
-school assignment. toy ("S#") syntax to c-syntax transpilation.
+toy ("S#") syntax to c-syntax transpilation
 
 - disclaimers ::
   - assignment is incomplete

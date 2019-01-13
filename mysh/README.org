@@ -1,8 +1,6 @@
-* shell
+* mysh
 
-*** mysh
-
-basic linux shell. school project.
+basic linux shell
 
 - code structure ::
   - outline
