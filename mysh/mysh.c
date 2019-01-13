@@ -270,18 +270,43 @@ parse(char* line, struct lltok* tts)
     while (phrase != NULL)
     {
         tt = malloc(sizeof(struct lltok));
+        if (tt == NULL)
+        {
+            warnx("malloc error");
+            return 1;
+        }
         phrasecopy = malloc(strlen(phrase));
+        if (phrasecopy == NULL)
+        {
+            warnx("malloc error");
+            return 1;
+        }
         strcpy(phrasecopy, phrase);
 
         /* split on whitespace */
         ts = malloc(sizeof(struct ltok));
+        if (ts == NULL)
+        {
+            warnx("malloc error");
+            return 1;
+        }
         TAILQ_INIT(&ts->head);
         word_end = NULL;
         word = strtok_r(phrasecopy, delim, &word_end);
         while (word != NULL)
         {
             t = malloc(sizeof(struct ltok));
+            if (t == NULL)
+            {
+                warnx("malloc error");
+                return 1;
+            }
             wordcopy = malloc(strlen(word));
+            if (wordcopy == NULL)
+            {
+                warnx("malloc error");
+                return 1;
+            }
             strcpy(wordcopy, word);
             trim(&wordcopy);
             if (white(wordcopy))
@@ -424,8 +449,18 @@ loop_body(struct eh* eh, const char* line)
 
     /* parse */
     linecopy = malloc(strlen(line));
+    if (linecopy == NULL)
+    {
+        warnx("malloc error");
+        return 1;
+    }
     strcpy(linecopy, line);
     tts = malloc(sizeof(struct lltok));
+    if (tts == NULL)
+    {
+        warnx("malloc error");
+        return 1;
+    }
     TAILQ_INIT(&tts->head);
     if ((ok = parse(linecopy, tts)) > 0)
     {
@@ -447,7 +482,7 @@ loop_body(struct eh* eh, const char* line)
  * - Wrapper around loop_body() with actual looping structure.
  * - Handle stdin/arg/file variability.
  */
-void
+int
 loop(struct eh* eh, int loop_type, const char* line_or_file)
 {
     struct sigaction sa;
@@ -473,7 +508,7 @@ loop(struct eh* eh, int loop_type, const char* line_or_file)
         {
             if ((ok = get(&line, eh->editline, &getcount)) < 0)
             { /* C-d */
-                break;
+                return 0;
             }
             if (ok > 0)
             { /* empty line */
@@ -481,25 +516,29 @@ loop(struct eh* eh, int loop_type, const char* line_or_file)
             }
             if (getcount <= 0)
             { /* el_gets() error */
-                break;
+                return ERR_FAIL;
             }
             if ((ok = loop_body(eh, line)) != 0)
             {
-                break;
+                return ok;
             }
         }
         break;
 
     /* -c */
     case 1:
-        loop_body(eh, line_or_file);
+        if (loop_body(eh, line_or_file) != 0)
+        {
+            return ERR_FAIL;
+        }
         break;
 
     /* file */
     case 2:
         if ((file = open(line_or_file, O_RDONLY)) < 0)
         {
-            errx(ERR_FAIL, "file read error");
+            warnx("file read error");
+            return ERR_FAIL;
         }
         while (read(file, &ch, 1) > 0)
         {
@@ -517,6 +556,8 @@ loop(struct eh* eh, int loop_type, const char* line_or_file)
         close(file);
         break;
     }
+
+    return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -530,9 +571,19 @@ struct eh*
 eh_init(char* me)
 {
     struct eh* eh = malloc(sizeof(struct eh));
+    if (eh == NULL)
+    {
+        warnx("malloc error");
+        exit(ERR_FAIL);
+    }
     EditLine* ed = el_init(me, stdin, stdout, stderr);
     History* hi = history_init();
     HistEvent* ev = malloc(sizeof(HistEvent));
+    if (ev == NULL)
+    {
+        warnx("malloc error");
+        exit(ERR_FAIL);
+    }
     eh->editline = ed;
     eh->history = hi;
     eh->histevent = ev;
@@ -566,6 +617,7 @@ eh_end(struct eh* eh)
  * opt
  * - Handle mysh arguments using getopt.
  * - Currently only handles "-c".
+ * - If "-c" occurs, the rest are ignored
  */
 int
 opt(int argc, char** argv, char** line)
@@ -577,11 +629,11 @@ opt(int argc, char** argv, char** line)
         {
         case 'c':
             *line = strdup(optarg);
-            break;
+            return 0;
         default:
             return -1;
         }
     }
-    return 0;
+    return 1;
 }
 
