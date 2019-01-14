@@ -128,12 +128,14 @@ test_parse2()
 static char*
 test_opt()
 {
+    char* l;
     char* a[3];
     a[0] = "./mysh";
     a[1] = "-c";
     a[2] = "foo";
+    opt(3, a, &l);
     test_assert("failed opt()+ \"-c foo\"",
-                strcmp(opt(3, a), "foo") == 0);
+                strcmp(l, "foo") == 0);
     return 0;
 }
 

@@ -18,6 +18,7 @@ extern int LASTOK;
 int
 main(int argc, char** argv)
 {
+    int ok;
     char* line;
     struct eh* eh = eh_init(argv[0]);
 
@@ -25,13 +26,17 @@ main(int argc, char** argv)
     if (argc == 1)
     {
         printf("%s\n\n", motd());
-        loop(eh, 0, NULL);
+        loop(eh, LOOP_STDIN, NULL); // return value unused
     }
 
     /* -c */
-    else if ((line = opt(argc, argv)))
+    else if ((ok = opt(argc, argv, &line)) == 0)
     {
-        loop(eh, 1, line);
+        loop(eh, LOOP_ARG, line); // return value unused
+    }
+    else if (ok < 0)
+    {
+        LASTOK = ERR_ARG; // getopt() prints its own err msg
     }
 
     /* file */
@@ -40,14 +45,14 @@ main(int argc, char** argv)
         if (argc > 2)
         {
             warnx("too many arguments");
-            return ERR_ARG;
+            LASTOK = ERR_ARG;
         }
         if(access(argv[1], F_OK) == -1)
         {
             warnx("file nonexistent");
-            return ERR_FNE;
+            LASTOK = ERR_FNE;
         }
-        loop(eh, 2, argv[1]);
+        loop(eh, LOOP_FILE, argv[1]); // return value unused
     }
 
     eh_end(eh);
