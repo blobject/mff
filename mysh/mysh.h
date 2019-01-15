@@ -78,7 +78,7 @@ struct eh
 /* not yet unit-tested */
 int trim(char** s);
 int get(const char** l, EditLine* e, int* c);
-void eval(const struct lltok* t);
+int eval(const struct lltok* t);
 void rinse(struct lltok* t);
 int loop_body(struct eh* e, const char* l);
 struct eh* eh_init(char* s);

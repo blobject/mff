@@ -215,11 +215,6 @@ get(const char** line, EditLine* ed, int* count)
     {
         return 1;
     }
-    if (strcmp("exit\n", *line) == 0)
-    {
-        printf("%s\n", bye(0));
-        return -1;
-    }
     return 0;
 }
 
@@ -337,7 +332,7 @@ parse(char* line, struct lltok* tts)
  * - Converts list of lists of tokens into behavior
  *   (ie. system calls or native functionality).
  */
-void
+int
 eval(const struct lltok* tts)
 {
     struct lltok* tt;
@@ -372,11 +367,18 @@ eval(const struct lltok* tts)
             continue;
         }
 
+        /* exit */
+        if (strcmp("exit", a[0]) == 0)
+        {
+            printf("%s\n", bye(0));
+            return 1;
+        }
+
         /* exec */
         if ((child = fork()) < 0)
         {
             warnx("fork error");
-            return;
+            return -1;
         }
         else if (child == 0)
         {
@@ -398,6 +400,8 @@ eval(const struct lltok* tts)
             LASTOK = WEXITSTATUS(status);
         }
     }
+
+    return 0;
 }
 
 /*
@@ -469,7 +473,10 @@ loop_body(struct eh* eh, const char* line)
     free(linecopy);
 
     /* eval */
-    eval(tts);
+    if ((ok = eval(tts)) > 0)
+    {
+        return 1;
+    }
 
     /* rinse */
     rinse(tts);
