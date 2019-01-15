@@ -236,13 +236,36 @@ parse(char* line, struct lltok* tts)
 
     /* line pattern validity */
     regex_t re;
-    int ok;
-    if ((ok = regcomp(&re, ";[ \t]*;", 0)) != 0)
+    if ((regcomp(&re, ";[ \t]*;", 0)) != 0)
     {
         warnx("regex compilation error");
         return 1;
     }
-    if ((ok = regexec(&re, line, 0, NULL, 0)) == 0)
+    if ((regexec(&re, line, 0, NULL, 0)) == 0)
+    {
+        LASTOK = ERR_SYN;
+        regfree(&re);
+        warnx("%d: syntax error", LINECOUNT);
+        return 1;
+    }
+    if ((regcomp(&re, "[ \t][ \t]*[|<>][ \t][ \t]*", 0)) != 0)
+    {
+        warnx("regex compilation error");
+        return 1;
+    }
+    if ((regexec(&re, line, 0, NULL, 0)) == 0)
+    {
+        LASTOK = ERR_SYN;
+        regfree(&re);
+        warnx("%d: syntax error", LINECOUNT);
+        return 1;
+    }
+    if ((regcomp(&re, "[ \t][ \t]*>>[ \t][ \t]*", 0)) != 0)
+    {
+        warnx("regex compilation error");
+        return 1;
+    }
+    if ((regexec(&re, line, 0, NULL, 0)) == 0)
     {
         LASTOK = ERR_SYN;
         regfree(&re);
