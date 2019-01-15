@@ -267,7 +267,7 @@ parse(char* line, struct lltok* tts)
     char* phrase_end;
     char* word_end;
     char* phrase = strtok_r(line, ";", &phrase_end);
-    while (phrase != NULL)
+    while (phrase != NULL && !white(phrase))
     {
         tt = malloc(sizeof(struct lltok));
         if (tt == NULL)
