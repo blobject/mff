@@ -1,3 +1,8 @@
+// file: exam190201/main.c
+// by  : jooh@cuni.cz
+// for : nswi015
+// lic.: mit
+
 #include <assert.h>
 #include <ctype.h>
 #include <err.h>
@@ -78,10 +83,7 @@ get(const char* f, char* str)
 {
   int stop = 0;
   int count = 0;
-  while (!stop)
-  {
-    follow(&stop, str, &count, f);
-  }
+  follow(&stop, str, &count, f);
 }
 
 int
@@ -126,6 +128,7 @@ main(int argc, char** argv)
     printf("DEBUG: 1st child, executing %s\n", one);
     close(p[0]);
     dup2(p[1], 1);
+
     if (execlp(one, one, NULL) < 0)
     {
       errx(1, "exec (%s)", one);
@@ -143,6 +146,7 @@ main(int argc, char** argv)
   if (pidtwo == 0)
   {
     printf("DEBUG: 2nd child, executing %s\n", two);
+
     // redirect output
     int f = open(out, O_CREAT | O_WRONLY, 0600);
     if (f == -1)
@@ -164,4 +168,6 @@ main(int argc, char** argv)
 
   // parent
   wait(NULL);
+
+  return 0;
 }
