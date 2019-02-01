@@ -1,5 +1,7 @@
 deck/deck
+exam190201/exam
 mysh/mysh
 ssharp/transpile
 *.so
+*/a.out
 */test

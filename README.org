@@ -7,3 +7,4 @@
 
 - nswi015 ::
   - *[[mysh][mysh]]*: [[https://github.com/agarick/mff/tree/nswi015_mysh_phase1/mysh][phase1]]
+  - *[[exam190201][exam]]*
