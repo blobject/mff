@@ -4,7 +4,8 @@
   - *[[array][array]]*
   - *[[ssharp][ssharp]]*: [[https://github.com/agarick/mff/tree/nprg041_ssharp_submit/ssharp][submit]]
   - *[[deck][deck]]*
+  - *[[exam190205][exam]]* (2019 feb 05)
 
 - nswi015 ::
   - *[[mysh][mysh]]*: [[https://github.com/agarick/mff/tree/nswi015_mysh_phase1/mysh][phase1]]
-  - *[[exam190201][exam]]*
+  - *[[exam190201][exam]]* (2019 feb 01)
