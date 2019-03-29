@@ -5,12 +5,12 @@ basic linux shell
 - code structure ::
   - outline
     1. mysh starts: [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/main.c#L13][main()]]
-    1. "mode" of the shell is determined: [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/main.c#L13][main()]], [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L565][opt()]], [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L445][loop()]]
-    1. repl starts: [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L445][loop()]], [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L410][loop_body()]]
-    1. input is read, variation depending on mode: [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L445][loop()]], [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L192][get()]]
-    1. read input is parsed into tokens: [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L226][parse()]]
-    1. tokens are evaluated: [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L309][eval()]]
-    1. next iteration of repl is readied: [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L378][rinse()]]
+    2. "mode" of the shell is determined: [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/main.c#L13][main()]], [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L565][opt()]], [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L445][loop()]]
+    3. repl starts: [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L445][loop()]], [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L410][loop_body()]]
+    4. input is read, variation depending on mode: [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L445][loop()]], [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L192][get()]]
+    5. read input is parsed into tokens: [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L226][parse()]]
+    6. tokens are evaluated: [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L309][eval()]]
+    7. next iteration of repl is readied: [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L378][rinse()]]
   - *./(mff/mysh/)makefile*
     - first =cd mff/mysh=
     - build: =make=
@@ -54,6 +54,19 @@ basic linux shell
   - :-D should work on lab computers (but tests fail)
   - :-( check for mm issues using valgrind (libcursesw, libedit giving trouble)
 
+- phase 1 post hoc ::
+  - wip: handle ^C to kill foreground process
+  - wip: return value of signalled command is 128
+  - wip: check for mm issues using valgrind
+  - wip: various issues (see github 2,3,9,10,11,12)
+
 - phase 2 requirements ::
   - due 30 jun 2019
-  - /WIP/
+  - wip: implement pipes
+  - wip: pipes limited only by machine resources
+  - wip: pipes can be separated by a semicolon
+  - wip: wait for all commands in pipeline to finish before printing next prompt
+  - wip: implement redirection: >, <, >>
+  - wip: whitespace not significant in redirection
+  - wip: can assume redirection occurs always at the end (last file considered when redundant)
+  - wip: redirection "after" piping
