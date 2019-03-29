@@ -1,11 +1,16 @@
 * mff uk
 
-- nprg041 ::
+- nprg005 (non-procedural) ::
+
+- nprg041 (c++) ::
   - *[[array][array]]*
   - *[[ssharp][ssharp]]*: [[https://github.com/agarick/mff/tree/nprg041_ssharp_submit/ssharp][submit]]
   - *[[deck][deck]]*
   - *[[exam190205][exam]]* (2019 feb 05)
 
-- nswi015 ::
+- nprg045 (software project) ::
+  - *[[emergence][emergence]]*
+
+- nswi015 (unix c) ::
   - *[[mysh][mysh]]*: [[https://github.com/agarick/mff/tree/nswi015_mysh_phase1/mysh][phase1]]
   - *[[exam190201][exam]]* (2019 feb 01)
