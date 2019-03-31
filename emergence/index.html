@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>emergence</title>
+    <style>
+      body
+      { margin: 0; }
+      #emergence
+      { display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        align-content: stretch; }
+      #top, #bot
+      { display: flex;
+        flex-direction: row;
+        background: #76c4ae; }
+      #top
+      { flex-wrap: wrap;
+        justify-content: space-between; }
+      #top .left
+      { font-weight: 700; }
+      #bot
+      { justify-content: flex-end; }
+      canvas
+      { flex: 1;
+        background: #bee9e4; }
+    </style>
+  </head>
+  <body>
+    <div id="emergence">
+      <div id="top">
+        <div class="left">emergence</div>
+        <div class="right">help</div>
+      </div>
+      <canvas></canvas>
+      <div id="bot">
+        <div id="right">
+          <a href="https://github.com/agarick/mff/tree/master/emergence">source</a>
+        </div>
+      </div>
+    </div>
+    <script src="emergence.js"></script>
+  </body>
+</html>
