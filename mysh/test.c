@@ -46,7 +46,7 @@ static char*
 test_motd()
 {
     test_assert("failed motd()+",
-                0 == strcmp(motd(), "mysh v0.1\n(\"exit\", or C-d to exit. C-c C-c to cancel line.)"));
+                0 == strcmp(motd(), "mysh v0.1\n(\"exit\" or C-d to exit. C-c to cancel.)"));
     return 0;
 }
 
@@ -58,20 +58,6 @@ test_prompt()
     getcwd(cwd, sizeof(cwd));
     sprintf(s, "mysh:%s> ", cwd);
     test_assert("failed prompt()+", strcmp(prompt(), s) == 0);
-    return 0;
-}
-
-static char*
-test_bye1()
-{
-    test_assert("failed bye()+ nonl", strcmp(bye(0), "bye!") == 0);
-    return 0;
-}
-
-static char*
-test_bye2()
-{
-    test_assert("failed bye()+ nl", strcmp(bye(1), "\nbye!") == 0);
     return 0;
 }
 
@@ -159,8 +145,6 @@ test_all()
     test_run(test_white3); /*  3 */
     test_run(test_motd);   /*  4 */
     test_run(test_prompt); /*  5 */
-    test_run(test_bye1);   /*  6 */
-    test_run(test_bye2);   /*  7 */
     test_run(test_cd1);    /*  8 */
     test_run(test_cd2);    /*  9 */
     test_run(test_parse1); /* 10 */

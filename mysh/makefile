@@ -1,14 +1,22 @@
 CC=clang
-OPT=-DUNIX -ledit
+O=-DUNIX -Wno-builtin-requires-header # setjmp.h warning
+L=-ledit
 DEBUG=-g
 ME=mysh
+
 all: $(ME)
-$(ME): $(ME).c main.c
-	$(CC) $(OPT) $(DEBUG) $(ME).c main.c -o $(ME)
-test: $(ME).c test.c
-	$(CC) $(OPT) $(DEBUG) $(ME).c test.c -o test
+
+$(ME): parse.o repl.o util.o
+	$(CC) $(O) $(L) $(DEBUG) main.c parse.o repl.o util.o -o $(ME)
+
+test: parse.o repl.o util.o test.c
+	$(CC) $(O) $(L) $(DEBUG) test.c parse.o repl.o util.o -o test
+
+%.o: %.c
+	$(CC) $(O) $(DEBUG) -c $<
+
 run:
 	./$(ME)
+
 clean:
-	if test -e $(ME); then rm $(ME); fi
-	if test -e test; then rm test; fi
+	rm $(ME) *.o *.gch test

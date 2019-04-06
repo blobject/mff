@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <editline/readline.h> /* "libedit" (probably unnecessary) */
 #include <err.h>       /* warnx */
+#include <errno.h>     /* errno */
 #include <histedit.h>  /* "libedit" */
 #include <string.h>    /* strcmp, strcpy, strlen, strstr, strtok_r */
 #include <sys/queue.h> /* TAILQ_* */
@@ -22,6 +23,12 @@
 #define ERR_FNE   11
 #define ERR_EXEC 127
 #define ERR_SYN  254
+
+////////////////////////////////////////////////////////////////////////
+// globals
+
+static int LINECOUNT = 1;
+static int LASTOK = ERR_SUCC;
 
 ////////////////////////////////////////////////////////////////////////
 // enums
