@@ -3,9 +3,9 @@ OPT=-DUNIX -ledit
 DEBUG=-g
 ME=mysh
 all: $(ME)
-$(ME):
+$(ME): $(ME).c main.c
 	$(CC) $(OPT) $(DEBUG) $(ME).c main.c -o $(ME)
-test:
+test: $(ME).c test.c
 	$(CC) $(OPT) $(DEBUG) $(ME).c test.c -o test
 run:
 	./$(ME)

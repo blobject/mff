@@ -103,23 +103,6 @@ prompt(void)
     return ret;
 }
 
-/*
- * bye
- * - String to print before REPL quits.
- */
-char*
-bye(int nl)
-{
-    static char ret[6];
-    char* n = "";
-    if (nl)
-    {
-        n = "\n";
-    }
-    sprintf(ret, "%sbye!", n);
-    return ret;
-}
-
 ////////////////////////////////////////////////////////////////////////
 // helpers: misc
 
@@ -208,7 +191,6 @@ get(const char** line, EditLine* ed, int* count)
     }
     if (*line == NULL)
     {
-        printf("%s\n", bye(1));
         return -1;
     }
     if (white(*line))
@@ -246,7 +228,7 @@ parse(char* line, struct lltok* tts)
         LASTOK = ERR_SYN;
         regfree(&re);
         warnx("%d: syntax error", LINECOUNT);
-        return 1;
+        return -1;
     }
     if ((regcomp(&re, "[ \t][ \t]*[|<>][ \t][ \t]*", 0)) != 0)
     {
@@ -258,7 +240,7 @@ parse(char* line, struct lltok* tts)
         LASTOK = ERR_SYN;
         regfree(&re);
         warnx("%d: syntax error", LINECOUNT);
-        return 1;
+        return -1;
     }
     if ((regcomp(&re, "[ \t][ \t]*>>[ \t][ \t]*", 0)) != 0)
     {
@@ -270,7 +252,7 @@ parse(char* line, struct lltok* tts)
         LASTOK = ERR_SYN;
         regfree(&re);
         warnx("%d: syntax error", LINECOUNT);
-        return 1;
+        return -1;
     }
     regfree(&re);
 
@@ -393,7 +375,6 @@ eval(const struct lltok* tts)
         /* exit */
         if (strcmp("exit", a[0]) == 0)
         {
-            printf("%s\n", bye(0));
             return 1;
         }
 
@@ -492,6 +473,10 @@ loop_body(struct eh* eh, const char* line)
     if ((ok = parse(linecopy, tts)) > 0)
     {
         return 1;
+    }
+    if (ok < 0)
+    {
+        return 0;
     }
     free(linecopy);
 
