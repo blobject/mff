@@ -21,48 +21,169 @@ extern int LASTOK;
 // parse & eval
 
 /*
+ * fill_words
+ * - Helper to parse(), 3 levels deep in the structure-filling.
+ */
+
+int
+fill_words(char* str, struct ltok* fill)
+{
+    struct ltok* words;
+    char* w;
+    char* w_cp;
+    char* w_end = NULL;
+
+    w = strtok_r(str, " \t", &w_end);
+    while (w != NULL)
+    {
+        words = malloc(sizeof(struct ltok));
+        if (words == NULL)
+        {
+            warnx("malloc error");
+            return 1;
+        }
+        w_cp = malloc(strlen(w));
+        if (w_cp == NULL)
+        {
+            warnx("malloc error");
+            return 1;
+        }
+
+        strcpy(w_cp, w);
+        trim(&w_cp);
+        if (white(w_cp))
+        {
+            free(w_cp);
+            w = strtok_r(NULL, " \t", &w_end);
+            continue;
+        }
+
+        words->word = w_cp;
+        TAILQ_INSERT_TAIL(&fill->head, words, list);
+
+        w = strtok_r(NULL, " \t", &w_end);
+    }
+
+    return 0;
+}
+
+/*
+ * fill_cmds
+ * - Helper to parse(), 2 levels deep in the structure-filling.
+ */
+
+int
+fill_cmds(char* str, struct lltok* fill)
+{
+    struct lltok* cmds;
+    struct ltok* cmd;
+    char* c;
+    char* c_cp;
+    char* c_end = NULL;
+
+    c = strtok_r(str, "|", &c_end);
+    while (c != NULL && !white(c))
+    {
+        cmds = malloc(sizeof(struct lltok));
+        if (cmds == NULL)
+        {
+            warnx("malloc error");
+            return 1;
+        }
+        c_cp = malloc(strlen(c));
+        if (c_cp == NULL)
+        {
+            warnx("malloc error");
+            return 1;
+        }
+        strcpy(c_cp, c);
+
+        cmd = malloc(sizeof(struct ltok));
+        if (cmd == NULL)
+        {
+            warnx("malloc error");
+            return 1;
+        }
+        TAILQ_INIT(&cmd->head);
+
+        if ((fill_words(c_cp, cmd)) != 0)
+        {
+            return 1;
+        }
+
+        cmds->cmd = cmd;
+        TAILQ_INSERT_TAIL(&fill->head, cmds, list);
+
+        c = strtok_r(NULL, "|", &c_end);
+    }
+
+    return 0;
+}
+
+/*
+ * fill_semis
+ * - Helper to parse(), 1 level deep in the structure-filling.
+ */
+
+int
+fill_semis(char* str, struct llltok* fill)
+{
+    struct llltok* semis;
+    struct lltok* semi;
+    char* s;
+    char* s_cp;
+    char* s_end = NULL;
+
+    s = strtok_r(str, ";", &s_end);
+    while (s != NULL && !white(s))
+    {
+        semis = malloc(sizeof(struct llltok));
+        if (semis == NULL)
+        {
+            warnx("malloc error");
+            return 1;
+        }
+        s_cp = malloc(strlen(s));
+        if (s_cp == NULL)
+        {
+            warnx("malloc error");
+            return 1;
+        }
+        strcpy(s_cp, s);
+
+        semi = malloc(sizeof(struct lltok));
+        if (semi == NULL)
+        {
+            warnx("malloc error");
+            return 1;
+        }
+        TAILQ_INIT(&semi->head);
+
+        if ((fill_cmds(s_cp, semi)) != 0)
+        {
+            return 1;
+        }
+
+        semis->semi = semi;
+        TAILQ_INSERT_TAIL(&fill->head, semis, list);
+
+        s = strtok_r(NULL, ";", &s_end);
+    }
+
+    return 0;
+}
+
+/*
  * parse
  * - Split input on semicolon, then on pipe, then on whitespace.
- * - Converts string into lltok (ie. list of lists of tokens).
+ *   Accomplish this by using 3 nested loops. See fill_*().
  */
 int
-parse(char* line, struct lltok* tts)
+parse(char* line, struct llltok* all)
 {
-    const char* delim = " \t";
-    struct lltok* tt;
-    struct ltok* ts;
-    struct ltok* t;
-    char* phrasecopy;
-    char* word;
-    char* wordcopy;
-
     /* line pattern validity */
     regex_t re;
     if ((regcomp(&re, ";[ \t]*;", 0)) != 0)
-    {
-        warnx("regex compilation error");
-        return 1;
-    }
-    if ((regexec(&re, line, 0, NULL, 0)) == 0)
-    {
-        LASTOK = ERR_SYN;
-        regfree(&re);
-        warnx("%d: syntax error", LINECOUNT);
-        return -1;
-    }
-    if ((regcomp(&re, "[ \t][ \t]*[|<>][ \t][ \t]*", 0)) != 0)
-    {
-        warnx("regex compilation error");
-        return 1;
-    }
-    if ((regexec(&re, line, 0, NULL, 0)) == 0)
-    {
-        LASTOK = ERR_SYN;
-        regfree(&re);
-        warnx("%d: syntax error", LINECOUNT);
-        return -1;
-    }
-    if ((regcomp(&re, "[ \t][ \t]*>>[ \t][ \t]*", 0)) != 0)
     {
         warnx("regex compilation error");
         return 1;
@@ -78,74 +199,16 @@ parse(char* line, struct lltok* tts)
 
     /* ignore comments */
     char* p = strstr(line, "#");
+
     if (p != NULL)
     {
         *p = '\0';
     }
 
-    /* split on semicolons */
-    char* phrase_end;
-    char* word_end;
-    char* phrase = strtok_r(line, ";", &phrase_end);
-    while (phrase != NULL && !white(phrase))
+    /* nested hydration */
+    if ((fill_semis(line, all)) != 0)
     {
-        tt = malloc(sizeof(struct lltok));
-        if (tt == NULL)
-        {
-            warnx("malloc error");
-            return 1;
-        }
-        phrasecopy = malloc(strlen(phrase));
-        if (phrasecopy == NULL)
-        {
-            warnx("malloc error");
-            return 1;
-        }
-        strcpy(phrasecopy, phrase);
-
-        /* split on whitespace */
-        ts = malloc(sizeof(struct ltok));
-        if (ts == NULL)
-        {
-            warnx("malloc error");
-            return 1;
-        }
-        TAILQ_INIT(&ts->head);
-        word_end = NULL;
-        word = strtok_r(phrasecopy, delim, &word_end);
-        while (word != NULL)
-        {
-            t = malloc(sizeof(struct ltok));
-            if (t == NULL)
-            {
-                warnx("malloc error");
-                return 1;
-            }
-            wordcopy = malloc(strlen(word));
-            if (wordcopy == NULL)
-            {
-                warnx("malloc error");
-                return 1;
-            }
-            strcpy(wordcopy, word);
-            trim(&wordcopy);
-            if (white(wordcopy))
-            {
-                free(wordcopy);
-                word = strtok_r(NULL, delim, &word_end);
-                continue;
-            }
-            t->value = wordcopy;
-            TAILQ_INSERT_TAIL(&ts->head, t, list);
-            word = strtok_r(NULL, delim, &word_end);
-        }
-
-        /* add whitespace-split tokens into token of tokens */
-        tt->token = ts;
-        TAILQ_INSERT_TAIL(&tts->head, tt, list);
-
-        /* rinse, ready to repeat */
-        phrase = strtok_r(NULL, ";", &phrase_end);
+        return 1;
     }
 
     return 0;
@@ -153,75 +216,78 @@ parse(char* line, struct lltok* tts)
 
 /*
  * eval
- * - Evaluate parsed tokens.
- * - Converts list of lists of tokens into behavior
- *   (ie. system calls or native functionality).
+ * - Evaluate result of parse.
+ * - Converts llltok into behavior (ie. system calls or native
+ *   functionality).
  */
 int
-eval(const struct lltok* tts)
+eval(const struct llltok* semis)
 {
-    struct lltok* tt;
-    struct ltok* t;
+    struct llltok* semi;
+    struct lltok* cmd;
+    struct ltok* word;
     unsigned int size;
     unsigned int count;
     pid_t child;
     int status;
 
     /* handle semicolon-split commands (see parse()) */
-    TAILQ_FOREACH(tt, &tts->head, list)
+    TAILQ_FOREACH(semi, &semis->head, list)
     {
-        size = 0;
-        count = 0;
-        TAILQ_FOREACH(t, &tt->token->head, list)
+        TAILQ_FOREACH(cmd, &semi->semi->head, list)
         {
-            size++;
-        }
-
-        /* hydrate whitespace-split words (see parse()) */
-        char* a[size + 1];
-        TAILQ_FOREACH(t, &tt->token->head, list)
-        {
-            a[count++] = t->value;
-        }
-        a[count] = NULL;
-
-        /* cd */
-        if (strcmp("cd", a[0]) == 0)
-        {
-            cd(a, count);
-            continue;
-        }
-
-        /* exit */
-        if (strcmp("exit", a[0]) == 0)
-        {
-            return 1;
-        }
-
-        /* exec */
-        if ((child = fork()) < 0)
-        {
-            warnx("fork error");
-            return -1;
-        }
-        else if (child == 0)
-        {
-            if (execvp(a[0], a) < 0)
+            size = 0;
+            count = 0;
+            TAILQ_FOREACH(word, &cmd->cmd->head, list)
             {
-                warnx("%s: command not found", a[0]);
-                exit(ERR_EXEC); /* exit forked child */
+                size++;
             }
-            LASTOK = errno;
-        }
-        else
-        {
-            while (wait(&status) != child);
-        }
 
-        /* register child's exit status */
-        if (WIFEXITED(status))
-        {
-            LASTOK = WEXITSTATUS(status);
+            char* a[size + 1];
+            TAILQ_FOREACH(word, &cmd->cmd->head, list)
+            {
+                a[count++] = word->word;
+            }
+            a[count] = NULL;
+
+            /* cd */
+            if (strcmp("cd", a[0]) == 0)
+            {
+                cd(a, count);
+                continue;
+            }
+
+            /* exit */
+            if (strcmp("exit", a[0]) == 0)
+            {
+                return 1;
+            }
+
+            /* exec */
+            if ((child = fork()) < 0)
+            {
+                warnx("fork error");
+                return -1;
+            }
+            else if (child == 0)
+            {
+                if (execvp(a[0], a) < 0)
+                {
+                    warnx("%s: command not found", a[0]);
+                    exit(ERR_EXEC); /* exit forked child */
+                }
+                LASTOK = errno;
+            }
+            else
+            {
+                while (wait(&status) != child);
+            }
+
+            /* register child's exit status */
+            if (WIFEXITED(status))
+            {
+                LASTOK = WEXITSTATUS(status);
+            }
         }
     }
 

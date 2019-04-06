@@ -143,26 +143,36 @@ get(const char** line, EditLine* ed, int* count)
  * - Get ready for the next iteration of REPL.
  */
 void
-rinse(struct lltok* tts)
+rinse(struct llltok* semis)
 {
-    struct lltok* tt;
-    struct ltok* ts;
-    struct ltok* t;
-    while (!TAILQ_EMPTY(&tts->head))
+    struct llltok* semi;
+    struct lltok* cmds;
+    struct lltok* cmd;
+    struct ltok* words;
+    struct ltok* word;
+
+    while (!TAILQ_EMPTY(&semis->head))
     {
-        tt = TAILQ_FIRST(&tts->head);
-        ts = tt->token;
-        while (!TAILQ_EMPTY(&ts->head))
+        semi = TAILQ_FIRST(&semis->head);
+        cmds = semi->semi;
+        while (!TAILQ_EMPTY(&cmds->head))
         {
-            t = TAILQ_FIRST(&ts->head);
-            TAILQ_REMOVE(&ts->head, t, list);
-            free(t);
+            cmd = TAILQ_FIRST(&cmds->head);
+            words = cmd->cmd;
+            while (!TAILQ_EMPTY(&words->head))
+            {
+                word = TAILQ_FIRST(&words->head);
+                TAILQ_REMOVE(&word->head, word, list);
+                free(word);
+            }
+            free(words);
+            TAILQ_REMOVE(&cmds->head, cmd, list);
+            free(cmd);
         }
-        TAILQ_REMOVE(&tts->head, tt, list);
-        free(ts);
-        free(tt);
+        free(cmds);
+        TAILQ_REMOVE(&semis->head, semi, list);
+        free(semi);
     }
-    free(tts);
 
     LINECOUNT++;
 }
@@ -179,28 +189,28 @@ int
 loop_body(struct eh* eh, const char* line)
 {
     int ok;
-    char* linecopy;
-    struct lltok* tts;
+    char* linecp;
+    struct llltok* semis;
 
     /* history */
     history(eh->history, eh->histevent, H_ENTER, line);
 
     /* parse */
-    linecopy = malloc(strlen(line));
-    if (linecopy == NULL)
+    linecp = malloc(strlen(line));
+    if (linecp == NULL)
     {
         warnx("malloc error");
         return 1;
     }
-    strcpy(linecopy, line);
-    tts = malloc(sizeof(struct lltok));
-    if (tts == NULL)
+    strcpy(linecp, line);
+    semis = malloc(sizeof(struct llltok));
+    if (semis == NULL)
     {
         warnx("malloc error");
         return 1;
     }
-    TAILQ_INIT(&tts->head);
-    if ((ok = parse(linecopy, tts)) > 0)
+    TAILQ_INIT(&semis->head);
+    if ((ok = parse(linecp, semis)) > 0)
     {
         return 1;
     }
@@ -208,16 +218,16 @@ loop_body(struct eh* eh, const char* line)
     {
         return 0;
     }
-    free(linecopy);
+    free(linecp);
 
     /* eval */
-    if ((ok = eval(tts)) > 0)
+    if ((ok = eval(semis)) > 0)
     {
         return 1;
     }
 
     /* rinse */
-    rinse(tts);
+    rinse(semis);
 
     return 0;
 }

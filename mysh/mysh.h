@@ -42,29 +42,43 @@ enum loop_type
 
 ////////////////////////////////////////////////////////////////////////
 // structs
-// - Currently, "ltok" and "lltok" are rather superfluous, as they serve
-//   no other purpose than to store split strings.
+// - l{1,3}tok represent the nested structure of the input line:
+//   - token = "word" (= string)
+//   - "ltok" = "list of words" = "cmd" (delim by space)
+//   - "lltok" = "list of cmds" = "semi" (delim by pipe)
+//   - "llltok" = "list of semis" = "semis" (delim by semicolon)
 
 /*
  * ltok
- * - List of tokens, where token is a string.
+ * - A "cmd". List of tokens, where token is a string.
  */
 struct ltok
 {
-    char* value; /* mysh understands only strings */
+    char* word; /* mysh understands only strings */
     TAILQ_ENTRY(ltok) list;
     TAILQ_HEAD(, ltok) head;
 };
 
 /*
  * lltok
- * - List of lists of tokens.
+ * - A "semi". List of lists of tokens.
  */
 struct lltok
 {
-    struct ltok* token;
+    struct ltok* cmd;
     TAILQ_ENTRY(lltok) list;
     TAILQ_HEAD(, lltok) head;
+};
+
+/*
+ * llltok
+ * - A "list of semis". List of lists of lists of tokens.
+ */
+struct llltok
+{
+    struct lltok* semi;
+    TAILQ_ENTRY(llltok) list;
+    TAILQ_HEAD(, llltok) head;
 };
 
 /*
@@ -85,8 +99,8 @@ struct eh
 /* not yet unit-tested */
 int trim(char** s);
 int get(const char** l, EditLine* e, int* c);
-int eval(const struct lltok* t);
-void rinse(struct lltok* t);
+int eval(const struct llltok* t);
+void rinse(struct llltok* t);
 int loop_body(struct eh* e, const char* l);
 struct eh* eh_init(char* s);
 void eh_end(struct eh* e);
@@ -97,7 +111,7 @@ char* motd(void);
 char* prompt(void);
 char* bye(int b);
 int cd(char** a, int n);
-int parse(char* l, struct lltok* t);
+int parse(char* l, struct llltok* t);
 int loop(struct eh* e, enum loop_type t, const char* l);
 int opt(int c, char** a, char** l);
 

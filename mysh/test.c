@@ -90,8 +90,8 @@ test_parse1()
     struct lltok* tt = malloc(sizeof(struct lltok));
     TAILQ_INIT(&tt->head);
     parse(s, tt);
-    char* value = TAILQ_FIRST(&(TAILQ_FIRST(&tt->head)->token)->head)->value;
-    test_assert("failed parse()+ \"foo\"", strcmp(value, s) == 0);
+    char* word = TAILQ_FIRST(&(TAILQ_FIRST(&tt->head)->cmd)->head)->word;
+    test_assert("failed parse()+ \"foo\"", strcmp(word, s) == 0);
     return 0;
 }
 
@@ -102,12 +102,12 @@ test_parse2()
     TAILQ_INIT(&tt->head);
     parse("foo bar", tt);
     struct ltok* t;
-    t = TAILQ_FIRST(&(TAILQ_FIRST(&tt->head)->token)->head);
-    char* value1 = t->value;
-    char* value2 = TAILQ_NEXT(t, list)->value;
+    t = TAILQ_FIRST(&(TAILQ_FIRST(&tt->head)->cmd)->head);
+    char* word1 = t->word;
+    char* word2 = TAILQ_NEXT(t, list)->word;
     test_assert("failed parse()+ \"foo bar\"",
-                (strcmp(value1, "foo") == 0)
-                && (strcmp(value2, "bar") == 0));
+                (strcmp(word1, "foo") == 0)
+                && (strcmp(word2, "bar") == 0));
     return 0;
 }
 
