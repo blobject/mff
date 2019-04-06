@@ -12,6 +12,7 @@
 #include <errno.h>    /* errno */
 #include <fcntl.h>    /* open */
 #include <regex.h>    /* reg{comp,exec,free} */
+#include <setjmp.h>   /* sigsetjmp */
 #include <signal.h>   /* sig{action,emptyset} */
 #include <sys/wait.h> /* wait */
 #include "mysh.h"
@@ -83,7 +84,7 @@ white(const char *s)
 char*
 motd(void)
 {
-    return "mysh v0.1\n(\"exit\", or C-d to exit. C-c C-c to cancel line.)";
+    return "mysh v0.1\n(\"exit\" or C-d to exit. C-c to cancel.)";
 }
 
 /*
@@ -158,6 +159,8 @@ cd(char** args, int size)
     return 0;
 }
 
+sigjmp_buf ctrlc;
+
 /*
  * sigint_handler
  * - Handle C-c.
@@ -167,6 +170,8 @@ void
 sigint_handler(int sig)
 {
     (void)sig;
+    printf("^C\n");
+    siglongjmp(ctrlc, 1);
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -181,12 +186,13 @@ sigint_handler(int sig)
 int
 get(const char** line, EditLine* ed, int* count)
 {
+    while (sigsetjmp(ctrlc, 1) != 0);
+
     errno = 0;
     *line = el_gets(ed, count);
     fflush(stdin);
     if (errno == EINTR)
     {
-        printf("^C\n");
         return 1;
     }
     if (*line == NULL)
@@ -500,12 +506,6 @@ loop_body(struct eh* eh, const char* line)
 int
 loop(struct eh* eh, enum loop_type t, const char* line_or_file)
 {
-    struct sigaction sa;
-    sa.sa_handler = sigint_handler;
-    sa.sa_flags = 0;
-    sigemptyset(&sa.sa_mask);
-    sigaction(SIGINT, &sa, NULL);
-
     int ok;
     const char* line;
     int getcount;
@@ -513,6 +513,12 @@ loop(struct eh* eh, enum loop_type t, const char* line_or_file)
     char ch;
     char readbuf[LIM];
     int readcount = 0;
+
+    struct sigaction sa;
+    sa.sa_handler = sigint_handler;
+    sa.sa_flags = 0;
+    sigemptyset(&sa.sa_mask);
+    sigaction(SIGINT, &sa, NULL);
 
     switch (t)
     {
@@ -522,6 +528,7 @@ loop(struct eh* eh, enum loop_type t, const char* line_or_file)
         {
             if ((ok = get(&line, eh->editline, &getcount)) < 0)
             { /* C-d */
+                printf("\n");
                 return 0;
             }
             if (ok > 0)
