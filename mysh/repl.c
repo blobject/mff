@@ -14,7 +14,6 @@
                      * histedit, string, sys/queue */
 
 extern int errno;
-extern int LINECOUNT;
 sigjmp_buf ctrlc;
 
 ////////////////////////////////////////////////////////////////////////
@@ -174,7 +173,7 @@ rinse(struct llltok* semis)
         free(semi);
     }
 
-    LINECOUNT++;
+    ++LINECOUNT;
 }
 
 ////////////////////////////////////////////////////////////////////////

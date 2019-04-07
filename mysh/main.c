@@ -8,7 +8,8 @@
 
 #include "mysh.h"
 
-extern int LASTOK;
+int LINECOUNT;
+int LASTOK;
 
 /*
  * main
@@ -18,6 +19,8 @@ extern int LASTOK;
 int
 main(int argc, char** argv)
 {
+    LINECOUNT = 1;
+    LASTOK = ERR_SUCC;
     int ok;
     char* line;
     struct eh* eh = eh_init(argv[0]);

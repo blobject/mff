@@ -14,8 +14,6 @@
                        * histedit, string, sys/queue */
 
 extern int errno;
-extern int LINECOUNT;
-extern int LASTOK;
 
 ////////////////////////////////////////////////////////////////////////
 // parse & eval
@@ -196,6 +194,32 @@ parse(char* line, struct llltok* all)
         return -1;
     }
     regfree(&re);
+    if ((regcomp(&re, "^[ \t]*|", 0)) != 0)
+    {
+        warnx("regex compilation error");
+        return 1;
+    }
+    if ((regexec(&re, line, 0, NULL, 0)) == 0)
+    {
+        LASTOK = ERR_SYN;
+        regfree(&re);
+        warnx("%d: syntax error", LINECOUNT);
+        return -1;
+    }
+    regfree(&re);
+    if ((regcomp(&re, "|[ \t\n]*$", 0)) != 0)
+    {
+        warnx("regex compilation error");
+        return 1;
+    }
+    if ((regexec(&re, line, 0, NULL, 0)) == 0)
+    {
+        LASTOK = ERR_SYN;
+        regfree(&re);
+        warnx("%d: syntax error", LINECOUNT);
+        return -1;
+    }
+    regfree(&re);
 
     /* ignore comments */
     char* p = strstr(line, "#");
@@ -215,6 +239,71 @@ parse(char* line, struct llltok* all)
 }
 
 /*
+ * spawn
+ * - Fork and pipe-handle a given command.
+ */
+int
+spawn(char* const* cmd, int in, int first, int last)
+{
+    int fd[2];
+    pipe(fd);
+    int status = 0;
+    pid_t child = fork();
+
+    if (child < 0)
+    {
+        warnx("fork error");
+        return -1;
+    }
+    if (child == 0)
+    {
+        if (in != -1)
+        {
+            if (first == 1)
+            {
+                dup2(fd[1], 1);
+            }
+            else if (first == 0 && last == 0)
+            {
+                dup2(in, 0);
+                dup2(fd[1], 1);
+                close(in);
+            }
+            else
+            {
+                close(fd[0]);
+                dup2(in, 0);
+            }
+        }
+        if (execvp(cmd[0], cmd) < 0)
+        {
+            warnx("%s: command not found", cmd[0]);
+            exit(ERR_EXEC); /* exit forked child */
+        }
+        LASTOK = errno;
+    }
+    else
+    {
+        while (wait(&status) != child);
+    }
+    if (WIFEXITED(status))
+    {
+        LASTOK = WEXITSTATUS(status);
+        if (LASTOK == ERR_EXEC)
+        {
+            return -1;
+        }
+    }
+
+    if (in != 1)
+    {
+        close(fd[1]);
+    }
+
+    return fd[0];
+}
+
+/*
  * eval
  * - Evaluate result of parse.
  * - Converts llltok into behavior (ie. system calls or native
@@ -226,67 +315,81 @@ eval(const struct llltok* semis)
     struct llltok* semi;
     struct lltok* cmd;
     struct ltok* word;
-    unsigned int size;
-    unsigned int count;
-    pid_t child;
-    int status;
 
-    /* handle semicolon-split commands (see parse()) */
+    int cmd_count;
+    int spawn_count;
+    int count;
+    int in = 0;
+    int first = 1;
+
     TAILQ_FOREACH(semi, &semis->head, list)
     {
+
+        cmd_count = 0;
         TAILQ_FOREACH(cmd, &semi->semi->head, list)
         {
-            size = 0;
+            ++cmd_count;
+        }
+
+        spawn_count = 0;
+        in = 0;
+        first = 1;
+        TAILQ_FOREACH(cmd, &semi->semi->head, list)
+        {
+            // build cmd as an array
             count = 0;
             TAILQ_FOREACH(word, &cmd->cmd->head, list)
             {
-                size++;
+                ++count;
             }
 
-            char* a[size + 1];
+            char* c[count + 1];
+            count = 0;
             TAILQ_FOREACH(word, &cmd->cmd->head, list)
             {
-                a[count++] = word->word;
+                c[count++] = word->word;
             }
-            a[count] = NULL;
+            c[count] = NULL;
 
             /* cd */
-            if (strcmp("cd", a[0]) == 0)
+            if (strcmp("cd", c[0]) == 0)
             {
-                cd(a, count);
+                cd(c, count);
                 continue;
             }
 
             /* exit */
-            if (strcmp("exit", a[0]) == 0)
+            if (strcmp("exit", c[0]) == 0)
             {
                 return 1;
             }
 
             /* exec */
-            if ((child = fork()) < 0)
+            if (cmd_count < 2)
             {
-                warnx("fork error");
-                return -1;
-            }
-            else if (child == 0)
-            {
-                if (execvp(a[0], a) < 0)
+                if (spawn(c, -1, -1, -1) == -1)
                 {
-                    warnx("%s: command not found", a[0]);
-                    exit(ERR_EXEC); /* exit forked child */
+                    return 1;
                 }
-                LASTOK = errno;
             }
             else
             {
-                while (wait(&status) != child);
-            }
-
-            /* register child's exit status */
-            if (WIFEXITED(status))
-            {
-                LASTOK = WEXITSTATUS(status);
+                ++spawn_count;
+                if (spawn_count < cmd_count)
+                {
+                    if ((in = spawn(c, in, first, 0)) == -1)
+                    {
+                        return 1;
+                    }
+                    first = 0;
+                }
+                else // last
+                {
+                    if ((in = spawn(c, in, 0, 1)) == -1)
+                    {
+                        return 1;
+                    }
+                }
             }
         }
     }
@@ -295,7 +398,7 @@ eval(const struct llltok* semis)
 }
 
 ////////////////////////////////////////////////////////////////////////
-// misc. evaluatory behavior
+// native behavior
 
 /*
  * cd

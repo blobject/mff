@@ -53,10 +53,10 @@ test_motd()
 static char*
 test_prompt()
 {
-    char s[LIM + 7];
+    char s[LIM + 8];
     char cwd[LIM];
     getcwd(cwd, sizeof(cwd));
-    sprintf(s, "mysh:%s> ", cwd);
+    sprintf(s, "(mysh)%s> ", cwd);
     test_assert("failed prompt()+", strcmp(prompt(), s) == 0);
     return 0;
 }
