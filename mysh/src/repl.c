@@ -188,28 +188,34 @@ int
 loop_body(struct eh* eh, const char* line)
 {
     int ok;
-    char* linecp;
-    struct llltok* semis;
 
     /* history */
     history(eh->history, eh->histevent, H_ENTER, line);
 
+    /* check */
+    if ((ok = check(line)) > 0)
+    {
+        return 1;
+    }
+
     /* parse */
-    linecp = malloc(strlen(line));
-    if (linecp == NULL)
+    char* line_cp = malloc(strlen(line));
+    if (line_cp == NULL)
     {
         warnx("malloc error");
         return 1;
     }
-    strcpy(linecp, line);
-    semis = malloc(sizeof(struct llltok));
+    strcpy(line_cp, line);
+
+    struct llltok* semis = malloc(sizeof(struct llltok));
     if (semis == NULL)
     {
         warnx("malloc error");
         return 1;
     }
+
     TAILQ_INIT(&semis->head);
-    if ((ok = parse(linecp, semis)) > 0)
+    if ((ok = parse(line_cp, semis)) > 0)
     {
         return 1;
     }
@@ -217,7 +223,7 @@ loop_body(struct eh* eh, const char* line)
     {
         return 0;
     }
-    free(linecp);
+    free(line_cp);
 
     /* eval */
     if ((ok = eval(semis)) > 0)

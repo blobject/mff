@@ -68,7 +68,7 @@ basic linux shell
   - :-D pipes limited only by machine resources
   - :-D pipes can be separated by a semicolon
   - :-D wait for all commands in pipeline to finish before printing next prompt
-  - wip: implement redirection: =>=, =<., =>>=
-  - wip: whitespace not significant in redirection
-  - wip: can assume redirection occurs always at the end (last file considered when redundant)
-  - wip: redirection "after" piping
+  - :-D implement redirection: =>=, =<., =>>=
+  - :-D whitespace not significant in redirection
+  - :-D can assume redirection occurs always at the end (last file considered when redundant)
+  - :-D redirection "after" piping

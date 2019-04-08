@@ -47,6 +47,12 @@ enum loop_type
 //   - "ltok" = "list of words" = "cmd" (delim by space)
 //   - "lltok" = "list of cmds" = "semi" (delim by pipe)
 //   - "llltok" = "list of semis" = "semis" (delim by semicolon)
+//   - example:
+//     cat /etc/passwd > txt | head ; echo foo
+//     ^-^ ^---------^         ^--^   ^--^ ^-^ word
+//     ^---------------****^   ^--^   ^------^ cmd
+//     ^---------------------*----^   ^------^ semi
+//     ^----------------------------*--------^ line
 
 /*
  * ltok
@@ -66,6 +72,9 @@ struct ltok
 struct lltok
 {
     struct ltok* cmd;
+    char* red_r;
+    char* red_w;
+    char* red_a;
     TAILQ_ENTRY(lltok) list;
     TAILQ_HEAD(, lltok) head;
 };
@@ -94,7 +103,7 @@ struct eh
 
 ////////////////////////////////////////////////////////////////////////
 // for testing
-// - See: "mysh.c" for implementation; "test.c" for unit tests
+// - See: "test.c" for unit tests
 
 /* not yet unit-tested */
 int trim(char** s);
@@ -104,6 +113,9 @@ void rinse(struct llltok* t);
 int loop_body(struct eh* e, const char* l);
 struct eh* eh_init(char* s);
 void eh_end(struct eh* e);
+int check(const char* l);
+int redir(char t, const char* l, char** s);
+char* unred(const char* l);
 
 /* unit-tested in "test.c" */
 int white(const char *s);

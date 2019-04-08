@@ -29,17 +29,17 @@ main(int argc, char** argv)
     if (argc == 1)
     {
         printf("%s\n\n", motd());
-        loop(eh, LOOP_STDIN, NULL); // return value unused
+        loop(eh, LOOP_STDIN, NULL); /* return value unused */
     }
 
     /* -c */
     else if ((ok = opt(argc, argv, &line)) == 0)
     {
-        loop(eh, LOOP_ARG, line); // return value unused
+        loop(eh, LOOP_ARG, line); /* return value unused */
     }
     else if (ok < 0)
     {
-        LASTOK = ERR_ARG; // getopt() prints its own err msg
+        LASTOK = ERR_ARG; /* getopt() prints its own err msg */
     }
 
     /* file */
@@ -55,7 +55,7 @@ main(int argc, char** argv)
             warnx("file nonexistent");
             LASTOK = ERR_FNE;
         }
-        loop(eh, LOOP_FILE, argv[1]); // return value unused
+        loop(eh, LOOP_FILE, argv[1]); /* return value unused */
     }
 
     eh_end(eh);

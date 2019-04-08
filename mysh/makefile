@@ -6,7 +6,7 @@ ME=mysh
 
 all: $(ME)
 
-$(ME): obj/parse.o obj/repl.o obj/util.o
+$(ME): obj/parse.o obj/repl.o obj/util.o src/main.c
 	mkdir -p bin
 	mkdir -p obj
 	$(CC) $(O) $(L) $(DEBUG) src/main.c obj/parse.o obj/repl.o obj/util.o -o bin/$(ME)

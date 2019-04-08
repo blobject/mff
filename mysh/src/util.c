@@ -59,6 +59,40 @@ white(const char *s)
     return 1;
 }
 
+/*
+ * unred
+ * - Return the substring until a redirection character, if one exists,
+ *   or a copy of the entire string if it does not.
+ */
+char*
+unred(const char* s)
+{
+    unsigned int n = 0;
+    for (unsigned long i = 0; i < strlen(s); i++)
+    {
+        if (s[i] == '<' || s[i] == '>')
+        {
+            n = i;
+            break;
+        }
+    }
+
+    if (n > 0)
+    {
+        return strndup(s, n);
+    }
+
+    char* cp = malloc(strlen(s));
+    if (cp == NULL)
+    {
+        warnx("malloc error");
+        return NULL;
+    }
+    strcpy(cp, s);
+
+    return cp;
+}
+
 ////////////////////////////////////////////////////////////////////////
 // util: convenience printing
 
