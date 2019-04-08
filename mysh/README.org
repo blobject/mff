@@ -16,13 +16,15 @@ basic linux shell
     - build: =make=
     - build test: =make test=
     - clean: =make clean=
-    - run: =./mysh= or =make run=
-    - test: =./test=
-  - *./(mff/mysh/)main.c* - main function as entry point into *mysh*
-  - *./(mff/mysh/)test.c* - unit test implementations, and main function to run them
-  - *./(mff/mysh/)mysh.c* - all function implementations, separated out to allow for the above two main functions
-  - *./(mff/mysh/)mysh.h* - struct implementations and function declarations
-  - *./(mff/mysh/)testscript.mysh* - a sample non-interactive script, try with =./mysh testscript.mysh=
+    - run: =./bin/mysh= or =make run=
+    - test: =./bin/test=
+  - *(mysh/src/)main.c* - main function as entry point into *mysh*
+  - *(mysh/src/)test.c* - unit test implementations, and main function to run them
+  - *(mysh/src/)mysh.h* - struct implementations and function declarations
+  - *(mysh/src/)parse.c* - parsing and evaluating
+  - *(mysh/src/)repl.c* - looping, initialising, and finalising
+  - *(mysh/src/)util.c* - utility and helpers
+  - *(mysh/)sample.mysh* - a sample non-interactive script, try with =./bin/mysh sample.mysh=
 
 - miscellany ::
   - read: libedit used
@@ -58,15 +60,15 @@ basic linux shell
   - wip: handle ^C to kill foreground process
   - wip: return value of signalled command is 128
   - wip: check for mm issues using valgrind
-  - wip: various issues (see github 2,3,9,10,11,12)
+  - :-D various issues (see github #2, #3, #9, #10, #11, #12)
 
 - phase 2 requirements ::
   - due 30 jun 2019
-  - wip: implement pipes
-  - wip: pipes limited only by machine resources
-  - wip: pipes can be separated by a semicolon
-  - wip: wait for all commands in pipeline to finish before printing next prompt
-  - wip: implement redirection: >, <, >>
+  - :-D implement pipes
+  - :-D pipes limited only by machine resources
+  - :-D pipes can be separated by a semicolon
+  - :-D wait for all commands in pipeline to finish before printing next prompt
+  - wip: implement redirection: =>=, =<., =>>=
   - wip: whitespace not significant in redirection
   - wip: can assume redirection occurs always at the end (last file considered when redundant)
   - wip: redirection "after" piping

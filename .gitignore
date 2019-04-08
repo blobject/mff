@@ -1,6 +1,7 @@
 deck/deck
 exam190201/exam
-mysh/mysh
+mysh/bin/
+mysh/obj/
 ssharp/transpile
 *.so
 */a.out
