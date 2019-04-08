@@ -6,11 +6,11 @@
   - *[[array][array]]*
   - *[[ssharp][ssharp]]*: [[https://github.com/agarick/mff/tree/nprg041_ssharp_submit/ssharp][submit]]
   - *[[deck][deck]]*
-  - *[[exam190205][exam]]* (2019 feb 05)
+  - *[[_exam_nprg041][exam]]* (2019 feb 05)
 
 - nprg045 (software project) ::
   - *[[emergence][emergence]]*
 
 - nswi015 (unix c) ::
-  - *[[mysh][mysh]]*: [[https://github.com/agarick/mff/tree/nswi015_mysh_phase1/mysh][phase1]]
-  - *[[exam190201][exam]]* (2019 feb 01)
+  - *[[mysh][mysh]]*: [[https://github.com/agarick/mff/tree/nswi015_mysh_phase1/mysh][phase1]], [[https://github.com/agarick/mff/tree/nswi015_mysh_phase2/mysh][phase2 (wip)]]
+  - *[[_exam_nswi015][exam]]* (2019 feb 01)
