@@ -22,6 +22,7 @@
 #define ERR_ARG   10
 #define ERR_FNE   11
 #define ERR_EXEC 127
+#define ERR_SIG  128
 #define ERR_SYN  254
 
 ////////////////////////////////////////////////////////////////////////
@@ -116,6 +117,7 @@ void eh_end(struct eh* e);
 int check(const char* l);
 int redir(char t, const char* l, char** s);
 char* unred(const char* l);
+void sigint_handler(int s);
 
 /* unit-tested in "test.c" */
 int white(const char *s);

@@ -1,8 +1,12 @@
 deck/deck
+
 exam190201/exam
-mysh/bin/
+
+mysh/mysh
 mysh/obj/
+
 ssharp/transpile
+
 *.so
 */a.out
 */test

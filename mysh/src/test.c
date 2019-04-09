@@ -46,7 +46,7 @@ static char*
 test_motd()
 {
     test_assert("failed motd()+",
-                0 == strcmp(motd(), "mysh v0.1\n(\"exit\" or C-d to exit. C-c to cancel.)"));
+                0 == strcmp(motd(), "mysh v0.2\n(\"exit\" or C-d to exit. C-c to cancel.)"));
     return 0;
 }
 

@@ -16,15 +16,15 @@ basic linux shell
     - build: =make=
     - build test: =make test=
     - clean: =make clean=
-    - run: =./bin/mysh= or =make run=
-    - test: =./bin/test=
+    - run: =./mysh= or =make run=
+    - test: =./test=
   - *(mysh/src/)main.c* - main function as entry point into *mysh*
   - *(mysh/src/)test.c* - unit test implementations, and main function to run them
   - *(mysh/src/)mysh.h* - struct implementations and function declarations
   - *(mysh/src/)parse.c* - parsing and evaluating
   - *(mysh/src/)repl.c* - looping, initialising, and finalising
   - *(mysh/src/)util.c* - utility and helpers
-  - *(mysh/)sample.mysh* - a sample non-interactive script, try with =./bin/mysh sample.mysh=
+  - *(mysh/)sample.mysh* - a sample non-interactive script, try with =./mysh sample.mysh=
 
 - miscellany ::
   - read: libedit used
@@ -57,9 +57,9 @@ basic linux shell
   - :-( check for mm issues using valgrind (libcursesw, libedit giving trouble)
 
 - phase 1 post hoc ::
-  - wip: handle ^C to kill foreground process
-  - wip: return value of signalled command is 128
-  - wip: check for mm issues using valgrind
+  - :-D handle ^C to kill foreground process
+  - :-D return value of signalled command is 128
+  - :-|: check for mm issues using valgrind (no errors by mysh, but many errors by libedit and libncursesw)
   - :-D various issues (see github #2, #3, #9, #10, #11, #12)
 
 - phase 2 requirements ::

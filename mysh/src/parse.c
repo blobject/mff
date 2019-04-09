@@ -284,6 +284,17 @@ parse(char* line, struct llltok* all)
 }
 
 /*
+ * child_sigint_handler
+ * - Handle C-c for children.
+ */
+void
+child_sigint_handler(int sig)
+{
+    (void)sig;
+    LASTOK = 128;
+}
+
+/*
  * spawn
  * - Fork a given command while handling pipes and redirects.
  */
@@ -291,6 +302,12 @@ int
 spawn(char** cmd, int in, int first, int last,
       const char* red_r, const char* red_w, const char* red_a)
 {
+    struct sigaction sa;
+    sa.sa_handler = child_sigint_handler;
+    sa.sa_flags = 0;
+    sigemptyset(&sa.sa_mask);
+    sigaction(SIGINT, &sa, NULL);
+
     int p[2];
     if (pipe(p) == -1)
     {
@@ -477,7 +494,6 @@ eval(const struct llltok* semis)
             {
                 if (spawn(c, -1, -1, -1, r, w, a) == -1)
                 {
-                    warnx("spawn error");
                     return -1;
                 }
             }
@@ -489,7 +505,6 @@ eval(const struct llltok* semis)
                     if ((in = spawn(c, in, first, 0, r, w, a))
                         == -1)
                     {
-                        warnx("spawn error");
                         return -1;
                     }
                     first = 0;
@@ -499,11 +514,17 @@ eval(const struct llltok* semis)
                     if ((in = spawn(c, in, 0, 1, r, w, a))
                         == -1)
                     {
-                        warnx("spawn error");
                         return -1;
                     }
                 }
             }
+
+            struct sigaction sa;
+
+            sa.sa_handler = sigint_handler;
+            sa.sa_flags = 0;
+            sigemptyset(&sa.sa_mask);
+            sigaction(SIGINT, &sa, NULL);
         }
     }
 

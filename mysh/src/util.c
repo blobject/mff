@@ -103,7 +103,7 @@ unred(const char* s)
 char*
 motd(void)
 {
-    return "mysh v0.1\n(\"exit\" or C-d to exit. C-c to cancel.)";
+    return "mysh v0.2\n(\"exit\" or C-d to exit. C-c to cancel.)";
 }
 
 /*

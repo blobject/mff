@@ -7,21 +7,19 @@ ME=mysh
 all: $(ME)
 
 $(ME): obj/parse.o obj/repl.o obj/util.o src/main.c
-	mkdir -p bin
 	mkdir -p obj
-	$(CC) $(O) $(L) $(DEBUG) src/main.c obj/parse.o obj/repl.o obj/util.o -o bin/$(ME)
+	$(CC) $(O) $(L) $(DEBUG) src/main.c obj/parse.o obj/repl.o obj/util.o -o $(ME)
 
 test: obj/parse.o obj/repl.o obj/util.o src/test.c
-	mkdir -p bin
 	mkdir -p obj
-	$(CC) $(O) $(L) $(DEBUG) src/test.c obj/parse.o obj/repl.o obj/util.o -o bin/test
+	$(CC) $(O) $(L) $(DEBUG) src/test.c obj/parse.o obj/repl.o obj/util.o -o test
 
 obj/%.o: src/%.c
 	mkdir -p obj
 	$(CC) $(O) $(DEBUG) -c $< -o $@
 
 run:
-	bin/$(ME)
+	./$(ME)
 
 clean:
-	rm -R obj/ bin/ test
+	rm -R obj/ test $(ME)
