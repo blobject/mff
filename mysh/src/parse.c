@@ -1,4 +1,4 @@
-// file: mysh/parse.c
+// file: mysh/src/parse.c
 // by  : jooh@cuni.cz
 // for : nswi015
 // lic.: mit
@@ -27,6 +27,7 @@ int
 check(const char* line)
 {
     regex_t re;
+
     if ((regcomp(&re, ";[ \t]*;", 0)) != 0)
     {
         warnx("regex compilation error");
@@ -34,9 +35,9 @@ check(const char* line)
     }
     if ((regexec(&re, line, 0, NULL, 0)) == 0)
     {
-        LASTOK = ERR_SYN;
         regfree(&re);
         warnx("%d: syntax error", LINECOUNT);
+        LASTOK = ERR_SYN;
         return -1;
     }
     regfree(&re);
@@ -48,9 +49,9 @@ check(const char* line)
     }
     if ((regexec(&re, line, 0, NULL, 0)) == 0)
     {
-        LASTOK = ERR_SYN;
         regfree(&re);
         warnx("%d: syntax error", LINECOUNT);
+        LASTOK = ERR_SYN;
         return -1;
     }
     regfree(&re);
@@ -62,9 +63,9 @@ check(const char* line)
     }
     if ((regexec(&re, line, 0, NULL, 0)) == 0)
     {
-        LASTOK = ERR_SYN;
         regfree(&re);
         warnx("%d: syntax error", LINECOUNT);
+        LASTOK = ERR_SYN;
         return -1;
     }
     regfree(&re);
@@ -74,7 +75,7 @@ check(const char* line)
 
 /*
  * fill_words
- * - Helper to parse(), 3 levels deep in the structure-filling.
+ * - Helper to parse()'s structure-filling, 3 levels deep.
  */
 int
 fill_words(char* str, struct ltok* fill)
@@ -93,13 +94,13 @@ fill_words(char* str, struct ltok* fill)
             warnx("malloc error");
             return 1;
         }
+
         w_cp = malloc(strlen(w));
         if (w_cp == NULL)
         {
             warnx("malloc error");
             return 1;
         }
-
         strcpy(w_cp, w);
         trim(&w_cp);
         if (white(w_cp))
@@ -120,7 +121,7 @@ fill_words(char* str, struct ltok* fill)
 
 /*
  * fill_cmds
- * - Helper to parse(), 2 levels deep in the structure-filling.
+ * - Helper to parse()'s structure-filling, 2 levels deep.
  */
 int
 fill_cmds(char* str, struct lltok* fill)
@@ -191,13 +192,13 @@ fill_cmds(char* str, struct lltok* fill)
             return 1;
         }
 
-        free(c_cp);
         cmds->cmd = cmd;
         cmds->red_r = red_r;
         cmds->red_w = red_w;
         cmds->red_a = red_a;
         TAILQ_INSERT_TAIL(&fill->head, cmds, list);
 
+        free(c_cp);
         c = strtok_r(NULL, "|", &c_end);
     }
 
@@ -206,7 +207,7 @@ fill_cmds(char* str, struct lltok* fill)
 
 /*
  * fill_semis
- * - Helper to parse(), 1 level deep in the structure-filling.
+ * - Helper to parse()'s structure-filling, 1 levels deep.
  */
 int
 fill_semis(char* str, struct llltok* fill)
@@ -226,6 +227,7 @@ fill_semis(char* str, struct llltok* fill)
             warnx("malloc error");
             return 1;
         }
+
         s_cp = malloc(strlen(s));
         if (s_cp == NULL)
         {
@@ -248,10 +250,10 @@ fill_semis(char* str, struct llltok* fill)
             return 1;
         }
 
-        free(s_cp);
         semis->semi = semi;
         TAILQ_INSERT_TAIL(&fill->head, semis, list);
 
+        free(s_cp);
         s = strtok_r(NULL, ";", &s_end);
     }
 
@@ -291,7 +293,7 @@ void
 child_sigint_handler(int sig)
 {
     (void)sig;
-    LASTOK = 128;
+    LASTOK = ERR_SIG;
 }
 
 /*
@@ -303,12 +305,14 @@ spawn(char** cmd, int in, int first, int last,
       const char* red_r, const char* red_w, const char* red_a)
 {
     struct sigaction sa;
+
     sa.sa_handler = child_sigint_handler;
     sa.sa_flags = 0;
     sigemptyset(&sa.sa_mask);
     sigaction(SIGINT, &sa, NULL);
 
     int p[2];
+
     if (pipe(p) == -1)
     {
         warnx("pipe error");
@@ -433,13 +437,12 @@ eval(const struct llltok* semis)
     struct llltok* semi;
     struct lltok* cmd;
     struct ltok* word;
-    char* r;
-    char* w;
-    char* a;
-
     int cmd_count;
     int spawn_count;
     int count;
+    char* r;
+    char* w;
+    char* a;
     int in = 0;
     int first = 1;
 
@@ -490,15 +493,16 @@ eval(const struct llltok* semis)
             }
 
             /* exec */
-            if (cmd_count < 2)
+            if (cmd_count < 2) /* no pipeline */
             {
                 if (spawn(c, -1, -1, -1, r, w, a) == -1)
                 {
                     return -1;
                 }
             }
-            else
+            else /* pipeline */
             {
+                /* not last in pipeline */
                 ++spawn_count;
                 if (spawn_count < cmd_count)
                 {
@@ -509,7 +513,7 @@ eval(const struct llltok* semis)
                     }
                     first = 0;
                 }
-                else /* last */
+                else /* last in pipeline */
                 {
                     if ((in = spawn(c, in, 0, 1, r, w, a))
                         == -1)
@@ -533,16 +537,23 @@ eval(const struct llltok* semis)
 
 /*
  * redir
- * - Detect read, write, or append redirection ("<", ">", or ">>"
- *   respectively), returning the string (argument variable) and the
- *   index at which the redirection occurs (return value).
+ * - Detect read/write/append redirection ("<"/">"/">>" respectively),
+ *   returning the string (argument variable) and the index at which the
+ *   redirection occurs (return value).
  */
 int
 redir(char type, const char* line, char** s)
 {
-    char* linecp = malloc(strlen(line));
     char sign = '>';
     unsigned long signlen = 1;
+    int found = 0;
+    int count = 0;
+    int where = -1;
+    char* word_end = NULL;
+    char* word;
+    char* line_cp = malloc(strlen(line));
+
+    strcpy(line_cp, line);
 
     if (type == 'r')
     {
@@ -553,13 +564,7 @@ redir(char type, const char* line, char** s)
         signlen = 2;
     }
 
-    strcpy(linecp, line);
-    char* word_end = NULL;
-    char* word = strtok_r(linecp, " \t", &word_end);
-    int found = 0;
-    int count = 0;
-    int where = -1;
-
+    word = strtok_r(line_cp, " \t", &word_end);
     while (word != NULL)
     {
         ++count;
@@ -617,6 +622,7 @@ cd(char** args, int size)
     }
 
     char* dst;
+
     if (size == 1)
     {
         dst = getenv("HOME");
@@ -631,6 +637,7 @@ cd(char** args, int size)
     }
 
     DIR* dir = opendir(dst);
+
     if (dir)
     {
         closedir(dir);
@@ -651,6 +658,7 @@ cd(char** args, int size)
     char abs_dst[LIM];
     getcwd(abs_dst, sizeof(abs_dst)); /* assume no error */
     setenv("PWD", abs_dst, 1);
+
     return 0;
 }
 

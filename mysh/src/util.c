@@ -24,6 +24,7 @@ int
 trim(char** s)
 {
     char* end;
+
     while (isspace(**s))
     {
         ++s;
@@ -38,6 +39,7 @@ trim(char** s)
         --end;
     }
     end[1] = '\0';
+
     return 0;
 }
 
@@ -68,6 +70,7 @@ char*
 unred(const char* s)
 {
     unsigned int n = 0;
+
     for (unsigned long i = 0; i < strlen(s); i++)
     {
         if (s[i] == '<' || s[i] == '>')
@@ -83,11 +86,13 @@ unred(const char* s)
     }
 
     char* cp = malloc(strlen(s));
+
     if (cp == NULL)
     {
         warnx("malloc error");
         return NULL;
     }
+
     strcpy(cp, s);
 
     return cp;
@@ -115,11 +120,14 @@ prompt(void)
 {
     static char ret[LIM + 8];
     char cwd[LIM];
+
     if (getcwd(cwd, sizeof(cwd)) == NULL)
     {
         cwd[0] = 0;
     }
+
     sprintf(ret, "(mysh)%s> ", cwd);
+
     return ret;
 }
 

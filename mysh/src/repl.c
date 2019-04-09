@@ -39,32 +39,39 @@ struct eh*
 eh_init(char* me)
 {
     struct eh* eh = malloc(sizeof(struct eh));
+
     if (eh == NULL)
     {
         warnx("malloc error");
         exit(ERR_FAIL);
     }
+
     EditLine* ed = el_init(me, stdin, stdout, stderr);
     History* hi = history_init();
     HistEvent* ev = malloc(sizeof(HistEvent));
+
     if (ev == NULL)
     {
         warnx("malloc error");
         exit(ERR_FAIL);
     }
+
     eh->editline = ed;
     eh->history = hi;
     eh->histevent = ev;
+
     if (hi == 0)
     {
         warnx("history init error");
         el_end(ed);
         exit(ERR_FAIL);
     }
+
     el_set(ed, EL_PROMPT, &prompt);
     el_set(ed, EL_EDITOR, "emacs");
     history(hi, ev, H_SETSIZE, LIM);
     el_set(ed, EL_HIST, history, hi);
+
     return eh;
 }
 
@@ -91,6 +98,7 @@ int
 opt(int argc, char** argv, char** line)
 {
     int c;
+
     while ((c = getopt(argc, argv, "c:")) != -1)
     {
         switch (c)
@@ -102,6 +110,7 @@ opt(int argc, char** argv, char** line)
             return -1;
         }
     }
+
     return 1;
 }
 
@@ -134,6 +143,7 @@ get(const char** line, EditLine* ed, int* count)
     {
         return 1;
     }
+
     return 0;
 }
 
@@ -200,14 +210,17 @@ loop_body(struct eh* eh, const char* line)
 
     /* parse */
     char* line_cp = malloc(strlen(line));
+
     if (line_cp == NULL)
     {
         warnx("malloc error");
         return 1;
     }
+
     strcpy(line_cp, line);
 
     struct llltok* semis = malloc(sizeof(struct llltok));
+
     if (semis == NULL)
     {
         warnx("malloc error");
@@ -252,8 +265,8 @@ loop(struct eh* eh, enum loop_type t, const char* line_or_file)
     char ch;
     char readbuf[LIM];
     int readcount = 0;
-
     struct sigaction sa;
+
     sa.sa_handler = sigint_handler;
     sa.sa_flags = 0;
     sigemptyset(&sa.sa_mask);

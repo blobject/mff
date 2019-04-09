@@ -1,10 +1,10 @@
-// file: mysh/main.c
+// file: mysh/src/main.c
 // by  : jooh@cuni.cz
 // for : nswi015
 // lic.: mit
 
 ////////////////////////////////////////////////////////////////////////
-// mysh, a linux shell
+// mysh, a basic linux shell
 
 #include "mysh.h"
 
@@ -29,13 +29,13 @@ main(int argc, char** argv)
     if (argc == 1)
     {
         printf("%s\n\n", motd());
-        loop(eh, LOOP_STDIN, NULL); /* return value unused */
+        loop(eh, LOOP_STDIN, NULL); /* unused return value */
     }
 
     /* -c */
     else if ((ok = opt(argc, argv, &line)) == 0)
     {
-        loop(eh, LOOP_ARG, line); /* return value unused */
+        loop(eh, LOOP_ARG, line); /* unused return value */
     }
     else if (ok < 0)
     {
@@ -55,7 +55,7 @@ main(int argc, char** argv)
             warnx("file nonexistent");
             LASTOK = ERR_FNE;
         }
-        loop(eh, LOOP_FILE, argv[1]); /* return value unused */
+        loop(eh, LOOP_FILE, argv[1]); /* unused return value */
     }
 
     eh_end(eh);

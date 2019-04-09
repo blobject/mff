@@ -1,35 +1,38 @@
 * mysh
 
-basic linux shell
+basic linux shell (exec, cd, fork, pipe, redirect)
+
+- build ::
+  - first =cd mff/mysh=
+  - build: =make=
+  - build test: =make test=
+  - *run*: =./mysh= or =make run=
+  - test: =./test=
+  - clean: =make clean=
 
 - code structure ::
   - outline
     1. mysh starts: [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/main.c#L13][main()]]
-    2. "mode" of the shell is determined: [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/main.c#L13][main()]], [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L565][opt()]], [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L445][loop()]]
-    3. repl starts: [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L445][loop()]], [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L410][loop_body()]]
-    4. input is read, variation depending on mode: [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L445][loop()]], [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L192][get()]]
-    5. read input is parsed into tokens: [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L226][parse()]]
-    6. tokens are evaluated: [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L309][eval()]]
-    7. next iteration of repl is readied: [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L378][rinse()]]
-  - *./(mff/mysh/)makefile*
-    - first =cd mff/mysh=
-    - build: =make=
-    - build test: =make test=
-    - clean: =make clean=
-    - run: =./mysh= or =make run=
-    - test: =./test=
-  - *(mysh/src/)main.c* - main function as entry point into *mysh*
-  - *(mysh/src/)test.c* - unit test implementations, and main function to run them
-  - *(mysh/src/)mysh.h* - struct implementations and function declarations
-  - *(mysh/src/)parse.c* - parsing and evaluating
-  - *(mysh/src/)repl.c* - looping, initialising, and finalising
-  - *(mysh/src/)util.c* - utility and helpers
-  - *(mysh/)sample.mysh* - a sample non-interactive script, try with =./mysh sample.mysh=
+    2. "mode" of the shell is determined: [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/main.c#L13][main()]], [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L613][opt()]], [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/repl.c#L253][loop()]]
+    3. repl starts: [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/repl.c#L253][loop()]], [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/repl.c#L192][loop_body()]]
+    4. input is read, variation depending on mode: [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/repl.c#L253][loop()]], [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/repl.c#L120][get()]]
+    5. read input is parsed into tokens: [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/parse.c#L263][parse()]]
+    6. tokens are evaluated: [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/parse.c#L428][eval()]]
+    7. next iteration of repl is readied: [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/repl.c#L150][rinse()]]
+  - *makefile* - for =make ...=
+  - *src/main.c* - main function as entry point into *mysh*
+  - *src/test.c* - unit test implementations, and main function to run them
+  - *src/mysh.h* - struct implementations and function declarations
+  - *src/parse.c* - parsing and evaluating
+  - *src/repl.c* - looping, initialising, and finalising
+  - *src/util.c* - utility and helpers
+  - *sample.mysh* - a sample non-interactive script - try with =./mysh sample.mysh=
+  - *obj/* - compiled =*.o= files, not version-controlled
 
 - miscellany ::
   - read: libedit used
-  - style: no particular linter used
   - style: allman indent, 72 char width, spaces not tabs
+  - style: no particular linter used
   - testing: MinUnit "framework"
   - testing: coverage incomplete, partially failing on lab computers
 
@@ -57,18 +60,22 @@ basic linux shell
   - :-( check for mm issues using valgrind (libcursesw, libedit giving trouble)
 
 - phase 1 post hoc ::
-  - :-D handle ^C to kill foreground process
-  - :-D return value of signalled command is 128
+  - :-D [[https://github.com/agarick/mff/blob/nswi015_mysh_phase2/mysh/src/parse.c#L304][handle ^C to kill foreground process]]
+  - :-D [[https://github.com/agarick/mff/blob/nswi015_mysh_phase2/mysh/src/parse.c#L312][return value of signaled command is 128]]
   - :-|: check for mm issues using valgrind (no errors by mysh, but many errors by libedit and libncursesw)
-  - :-D various issues (see github #2, #3, #9, #10, #11, #12)
+  - :-D various issues (see github [[https://github.com/agarick/mff/issues/3][#3]], [[https://github.com/agarick/mff/issues/9][#9]], [[https://github.com/agarick/mff/issues/10][#10]], [[https://github.com/agarick/mff/issues/11][#11]], [[https://github.com/agarick/mff/issues/12][#12]])
 
 - phase 2 requirements ::
   - due 30 jun 2019
-  - :-D implement pipes
-  - :-D pipes limited only by machine resources
-  - :-D pipes can be separated by a semicolon
-  - :-D wait for all commands in pipeline to finish before printing next prompt
-  - :-D implement redirection: =>=, =<., =>>=
-  - :-D whitespace not significant in redirection
-  - :-D can assume redirection occurs always at the end (last file considered when redundant)
-  - :-D redirection "after" piping
+  - :-D [[https://github.com/agarick/mff/blob/nswi015_mysh_phase2/mysh/src/parse.c#L349][implement pipes]]
+  - :-D [[https://github.com/agarick/mff/blob/nswi015_mysh_phase2/mysh/src/parse.c#L199][pipes limited only by machine resources]]
+  - :-D [[https://github.com/agarick/mff/blob/nswi015_mysh_phase2/mysh/src/parse.c#L233][pipes can be separated by a semicolon]]
+  - :-D [[https://github.com/agarick/mff/blob/nswi015_mysh_phase2/mysh/src/parse.c#L416][wait for all commands in pipeline to finish before printing next prompt]]
+  - :-D [[https://github.com/agarick/mff/blob/nswi015_mysh_phase2/mysh/src/parse.c#L152][implement redirection]]: =>=, =<=, =>>=
+  - :-D [[https://github.com/agarick/mff/blob/nswi015_mysh_phase2/mysh/src/parse.c#L599][whitespace not significant in redirection]]
+  - :-D [[https://github.com/agarick/mff/blob/nswi015_mysh_phase2/mysh/src/parse.c#L595][can assume redirection occurs always at the end (last file considered when redundant)]]
+  - :-D [[https://github.com/agarick/mff/blob/nswi015_mysh_phase2/mysh/src/parse.c#L178][redirection "after" piping]]
+
+- phase 2 more ::
+  - wip: github #2
+  - wip: testing

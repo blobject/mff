@@ -1,4 +1,4 @@
-// file: mysh/mysh.h
+// file: mysh/src/mysh.h
 // by  : jooh@cuni.cz
 // for : nswi015
 // lic.: mit
@@ -16,7 +16,7 @@
 #include <sys/queue.h> /* TAILQ_* */
 #include <unistd.h>    /* access, chdir, execvp, fork, getcwd, getopt */
 
-#define LIM 1024
+#define LIM 4096
 #define ERR_SUCC   0
 #define ERR_FAIL   1
 #define ERR_ARG   10
@@ -30,10 +30,6 @@
 
 extern int LINECOUNT;
 extern int LASTOK;
-
-////////////////////////////////////////////////////////////////////////
-// enums
-
 enum loop_type
 {
     LOOP_STDIN,
@@ -43,17 +39,18 @@ enum loop_type
 
 ////////////////////////////////////////////////////////////////////////
 // structs
-// - l{1,3}tok represent the nested structure of the input line:
+// - l{1,3}tok represent the nested syntactic structure of the input:
 //   - token = "word" (= string)
 //   - "ltok" = "list of words" = "cmd" (delim by space)
 //   - "lltok" = "list of cmds" = "semi" (delim by pipe)
 //   - "llltok" = "list of semis" = "semis" (delim by semicolon)
 //   - example:
-//     cat /etc/passwd > txt | head ; echo foo
-//     ^-^ ^---------^         ^--^   ^--^ ^-^ word
-//     ^---------------****^   ^--^   ^------^ cmd
-//     ^---------------------*----^   ^------^ semi
-//     ^----------------------------*--------^ line
+//     mysh> cat /etc/passwd > txt | head ; echo foo
+//           ^-^ ^---------^         ^--^   ^--^ ^-^ word
+//           ^---------------++++^   ^--^   ^------^ cmd
+//           ^---------------------+----^   ^------^ semi
+//           ^----------------------------+--------^ line
+//     where "+"s refer to some additional parsing-related lexemes.
 
 /*
  * ltok
@@ -73,7 +70,7 @@ struct ltok
 struct lltok
 {
     struct ltok* cmd;
-    char* red_r;
+    char* red_r; /* per-cmd redirection */
     char* red_w;
     char* red_a;
     TAILQ_ENTRY(lltok) list;
@@ -104,7 +101,7 @@ struct eh
 
 ////////////////////////////////////////////////////////////////////////
 // for testing
-// - See: "test.c" for unit tests
+// - See: "src/test.c" for unit tests
 
 /* not yet unit-tested */
 int trim(char** s);
