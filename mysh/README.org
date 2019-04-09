@@ -20,12 +20,12 @@ basic linux shell (exec, cd, fork, pipe, redirect)
     6. tokens are evaluated: [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/parse.c#L428][eval()]]
     7. next iteration of repl is readied: [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/repl.c#L150][rinse()]]
   - *makefile* - for =make ...=
-  - *src/main.c* - main function as entry point into *mysh*
-  - *src/test.c* - unit test implementations, and main function to run them
-  - *src/mysh.h* - struct implementations and function declarations
-  - *src/parse.c* - parsing and evaluating
-  - *src/repl.c* - looping, initialising, and finalising
-  - *src/util.c* - utility and helpers
+  - src/ *main.c* - main function as entry point into *mysh*
+  - src/ *test.c* - unit test implementations, and main function to run them
+  - src/ *mysh.h* - struct implementations and function declarations
+  - src/ *parse.c* - parsing and evaluating
+  - src/ *repl.c* - looping, initialising, and finalising
+  - src/ *util.c* - utility and helpers
   - *sample.mysh* - a sample non-interactive script - try with =./mysh sample.mysh=
   - *obj/* - compiled =*.o= files, not version-controlled
 
@@ -77,5 +77,5 @@ basic linux shell (exec, cd, fork, pipe, redirect)
   - :-D [[https://github.com/agarick/mff/blob/nswi015_mysh_phase2/mysh/src/parse.c#L178][redirection "after" piping]]
 
 - phase 2 more ::
-  - wip: github #2
-  - wip: testing
+  - :-| github [[https://github.com/agarick/mff/issues/2][#2]]
+  - :-( testing (too many things to test, gave up)

@@ -1,10 +1,10 @@
-// file: mysh/util.c
+// file: mysh/src/util.c
 // by  : jooh@cuni.cz
 // for : nswi015
 // lic.: mit
 
 ////////////////////////////////////////////////////////////////////////
-// directives && globals
+// directives & globals
 
 #include <ctype.h>  /* isspace */
 #include "mysh.h"   /* mysh.h includes:
@@ -85,12 +85,17 @@ unred(const char* s)
         return strndup(s, n);
     }
 
-    char* cp = malloc(strlen(s));
+    char* cp = malloc(sizeof(char) * LIM);
 
     if (cp == NULL)
     {
         warnx("malloc error");
         return NULL;
+    }
+
+    if (strlen(s) > LIM)
+    {
+        warnx("input truncated");
     }
 
     strcpy(cp, s);

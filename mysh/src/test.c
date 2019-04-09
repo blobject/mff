@@ -1,4 +1,4 @@
-// file: mysh/test.c
+// file: mysh/src/test.c
 // by  : jooh@cuni.cz
 // for : nswi015
 // lic.: mit
@@ -15,6 +15,8 @@
 #define test_run(t) do { \
     char* msg = t(); test_count++; if (msg) return msg; } while (0)
 int test_count = 0;
+int LINECOUNT;
+int LASTOK;
 
 ////////////////////////////////////////////////////////////////////////
 // tests
@@ -87,10 +89,10 @@ static char*
 test_parse1()
 {
     char* s = "foo";
-    struct lltok* tt = malloc(sizeof(struct lltok));
-    TAILQ_INIT(&tt->head);
-    parse(s, tt);
-    char* word = TAILQ_FIRST(&(TAILQ_FIRST(&tt->head)->cmd)->head)->word;
+    struct llltok* line = malloc(sizeof(struct llltok));
+    TAILQ_INIT(&line->head);
+    parse(s, line);
+    char* word = TAILQ_FIRST(&(TAILQ_FIRST(&(TAILQ_FIRST(&line->head)->semi)->head)->cmd)->head)->word;
     test_assert("failed parse()+ \"foo\"", strcmp(word, s) == 0);
     return 0;
 }
@@ -98,13 +100,13 @@ test_parse1()
 static char*
 test_parse2()
 {
-    struct lltok* tt = malloc(sizeof(struct lltok));
-    TAILQ_INIT(&tt->head);
-    parse("foo bar", tt);
-    struct ltok* t;
-    t = TAILQ_FIRST(&(TAILQ_FIRST(&tt->head)->cmd)->head);
-    char* word1 = t->word;
-    char* word2 = TAILQ_NEXT(t, list)->word;
+    struct llltok* line = malloc(sizeof(struct llltok));
+    TAILQ_INIT(&line->head);
+    parse("foo bar", line);
+    struct ltok* words;
+    words = TAILQ_FIRST(&(TAILQ_FIRST(&(TAILQ_FIRST(&line->head)->semi)->head)->cmd)->head);
+    char* word1 = words->word;
+    char* word2 = TAILQ_NEXT(words, list)->word;
     test_assert("failed parse()+ \"foo bar\"",
                 (strcmp(word1, "foo") == 0)
                 && (strcmp(word2, "bar") == 0));
@@ -149,8 +151,9 @@ test_all()
     test_run(test_cd2);    /*  9 */
     test_run(test_parse1); /* 10 */
     test_run(test_parse2); /* 11 */
-    test_run(test_opt);    /* 12 */
-    test_run(test_loopc);  /* 13 */
+    test_run(test_parse3); /* 12 */
+    test_run(test_opt);    /* 13 */
+    test_run(test_loopc);  /* 14 */
     return 0;
 }
 

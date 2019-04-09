@@ -47,10 +47,10 @@ enum loop_type
 //   - example:
 //     mysh> cat /etc/passwd > txt | head ; echo foo
 //           ^-^ ^---------^         ^--^   ^--^ ^-^ word
-//           ^---------------++++^   ^--^   ^------^ cmd
+//           ^---------------+---^   ^--^   ^------^ cmd
 //           ^---------------------+----^   ^------^ semi
 //           ^----------------------------+--------^ line
-//     where "+"s refer to some additional parsing-related lexemes.
+//     where "+"s refer to special lexemes pertinent to parsing.
 
 /*
  * ltok
@@ -104,25 +104,25 @@ struct eh
 // - See: "src/test.c" for unit tests
 
 /* not yet unit-tested */
-int trim(char** s);
-int get(const char** l, EditLine* e, int* c);
-int eval(const struct llltok* t);
-void rinse(struct llltok* t);
-int loop_body(struct eh* e, const char* l);
-struct eh* eh_init(char* s);
-void eh_end(struct eh* e);
-int check(const char* l);
-int redir(char t, const char* l, char** s);
-char* unred(const char* l);
-void sigint_handler(int s);
+int trim(char**);
+int get(const char**, EditLine*, int*);
+int eval(const struct llltok*);
+void rinse(struct llltok*);
+int loop_body(struct eh*, const char*);
+struct eh* eh_init(char*);
+void eh_end(struct eh*);
+int check(const char*);
+int redir(char, const char*, char**);
+char* unred(const char*);
+void sigint_handler(int);
 
 /* unit-tested in "test.c" */
-int white(const char *s);
+int white(const char*);
 char* motd(void);
 char* prompt(void);
-char* bye(int b);
-int cd(char** a, int n);
-int parse(char* l, struct llltok* t);
-int loop(struct eh* e, enum loop_type t, const char* l);
-int opt(int c, char** a, char** l);
+char* bye(int);
+int cd(char**, int);
+int parse(char*, struct llltok*);
+int loop(struct eh*, enum loop_type, const char*);
+int opt(int, char**, char**);
 

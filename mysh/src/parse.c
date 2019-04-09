@@ -4,7 +4,7 @@
 // lic.: mit
 
 ////////////////////////////////////////////////////////////////////////
-// directives && globals
+// directives & globals
 
 #include <dirent.h>   /* DIR, {close,open}dir */
 #include <fcntl.h>    /* open */
@@ -75,7 +75,7 @@ check(const char* line)
 
 /*
  * fill_words
- * - Helper to parse()'s structure-filling, 3 levels deep.
+ * - Helper to parse()'s structure-filling. 3 levels deep.
  */
 int
 fill_words(char* str, struct ltok* fill)
@@ -95,12 +95,17 @@ fill_words(char* str, struct ltok* fill)
             return 1;
         }
 
-        w_cp = malloc(strlen(w));
+        w_cp = malloc(sizeof(char) * LIM);
         if (w_cp == NULL)
         {
             warnx("malloc error");
             return 1;
         }
+        if (strlen(w) > LIM)
+        {
+            warnx("input truncated");
+        }
+
         strcpy(w_cp, w);
         trim(&w_cp);
         if (white(w_cp))
@@ -121,7 +126,7 @@ fill_words(char* str, struct ltok* fill)
 
 /*
  * fill_cmds
- * - Helper to parse()'s structure-filling, 2 levels deep.
+ * - Helper to parse()'s structure-filling. 2 levels deep.
  */
 int
 fill_cmds(char* str, struct lltok* fill)
@@ -169,12 +174,19 @@ fill_cmds(char* str, struct lltok* fill)
             warnx("malloc error");
             return 1;
         }
+
+	/* remove any redirection */
         c_new = unred(c);
-        c_cp = malloc(strlen(c_new));
+
+        c_cp = malloc(sizeof(char) * LIM);
         if (c_cp == NULL)
         {
             warnx("malloc error");
             return 1;
+        }
+        if (strlen(c_new) > LIM)
+        {
+            warnx("input truncated");
         }
         strcpy(c_cp, c_new);
 
@@ -207,7 +219,7 @@ fill_cmds(char* str, struct lltok* fill)
 
 /*
  * fill_semis
- * - Helper to parse()'s structure-filling, 1 levels deep.
+ * - Helper to parse()'s structure-filling. 1 levels deep.
  */
 int
 fill_semis(char* str, struct llltok* fill)
@@ -228,11 +240,15 @@ fill_semis(char* str, struct llltok* fill)
             return 1;
         }
 
-        s_cp = malloc(strlen(s));
+        s_cp = malloc(sizeof(char) * LIM);
         if (s_cp == NULL)
         {
             warnx("malloc error");
             return 1;
+        }
+        if (strlen(s) > LIM)
+        {
+            warnx("input truncated");
         }
         strcpy(s_cp, s);
 
@@ -537,9 +553,9 @@ eval(const struct llltok* semis)
 
 /*
  * redir
- * - Detect read/write/append redirection ("<"/">"/">>" respectively),
- *   returning the string (argument variable) and the index at which the
- *   redirection occurs (return value).
+ * - Detect read/write/append redirection ("<" / ">" / ">>"
+ *   respectively), returning the string (argument variable) and the
+ *   index at which the redirection occurs (return value).
  */
 int
 redir(char type, const char* line, char** s)
@@ -552,6 +568,17 @@ redir(char type, const char* line, char** s)
     char* word_end = NULL;
     char* word;
     char* line_cp = malloc(strlen(line));
+
+    line_cp = malloc(sizeof(char) * LIM);
+    if (line_cp == NULL)
+    {
+        warnx("malloc error");
+        return 1;
+    }
+    if (strlen(line) > LIM)
+    {
+        warnx("input truncated");
+    }
 
     strcpy(line_cp, line);
 

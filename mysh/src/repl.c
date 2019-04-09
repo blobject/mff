@@ -1,4 +1,4 @@
-// file: mysh/repl.c
+// file: mysh/src/repl.c
 // by  : jooh@cuni.cz
 // for : nswi015
 // lic.: mit
@@ -209,12 +209,17 @@ loop_body(struct eh* eh, const char* line)
     }
 
     /* parse */
-    char* line_cp = malloc(strlen(line));
+    char* line_cp = malloc(sizeof(char) * LIM);
 
     if (line_cp == NULL)
     {
         warnx("malloc error");
         return 1;
+    }
+
+    if (strlen(line) > LIM)
+    {
+        warnx("input truncated");
     }
 
     strcpy(line_cp, line);
