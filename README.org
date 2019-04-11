@@ -12,5 +12,5 @@
   - *[[emergence][emergence]]*
 
 - nswi015 (unix c) ::
-  - *[[mysh][mysh]]*: [[https://github.com/agarick/mff/tree/nswi015_mysh_phase1/mysh][phase1]], [[https://github.com/agarick/mff/tree/nswi015_mysh_phase2/mysh][phase2 (wip)]]
+  - *[[mysh][mysh]]*: [[https://github.com/agarick/mff/tree/nswi015_mysh_phase1/mysh][phase1]], [[https://github.com/agarick/mff/tree/nswi015_mysh_phase2/mysh][phase2]]
   - *[[_exam_nswi015][exam]]* (2019 feb 01)

@@ -2,6 +2,8 @@
 
 basic linux shell (exec, cd, fork, pipe, redirect)
 
+per https://devnull-cz.github.io/unix-linux-prog-in-c/class-assignments/labs-assignment-2018.txt
+
 - build ::
   - first =cd mff/mysh=
   - build: =make=
@@ -66,7 +68,7 @@ basic linux shell (exec, cd, fork, pipe, redirect)
   - :-D various issues (see github [[https://github.com/agarick/mff/issues/3][#3]], [[https://github.com/agarick/mff/issues/9][#9]], [[https://github.com/agarick/mff/issues/10][#10]], [[https://github.com/agarick/mff/issues/11][#11]], [[https://github.com/agarick/mff/issues/12][#12]])
 
 - phase 2 requirements ::
-  - due 30 jun 2019
+  - due 30 jun 2019 (*[[https://github.com/agarick/mff/tree/nswi015_mysh_phase2/mysh][phase2 branch]]* frozen @ 11 apr 2019 [[https://github.com/agarick/mff/commit/e6046719f1707f46fc9a895a00a1697152d14e72][e6046719f1]])
   - :-D [[https://github.com/agarick/mff/blob/nswi015_mysh_phase2/mysh/src/parse.c#L349][implement pipes]]
   - :-D [[https://github.com/agarick/mff/blob/nswi015_mysh_phase2/mysh/src/parse.c#L199][pipes limited only by machine resources]]
   - :-D [[https://github.com/agarick/mff/blob/nswi015_mysh_phase2/mysh/src/parse.c#L233][pipes can be separated by a semicolon]]
