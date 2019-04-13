@@ -1,42 +1,46 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="utf-8">
     <title>emergence</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <style>
-      body
-      { margin: 0; }
-      #emergence
-      { display: flex;
-        flex-direction: column;
-        align-items: stretch;
-        align-content: stretch; }
-      #top, #bot
-      { display: flex;
-        flex-direction: row;
-        background: #76c4ae; }
-      #top
-      { flex-wrap: wrap;
-        justify-content: space-between; }
-      #top .left
-      { font-weight: 700; }
-      #bot
-      { justify-content: flex-end; }
-      canvas
-      { flex: 1;
-        background: #bee9e4; }
+     body
+     { margin: 0; }
+     #emergence
+     { display: flex;
+       flex-direction: column;
+       align-items: stretch;
+       align-content: stretch; }
+     #top, #bot
+     { display: flex;
+       flex-direction: row;
+       background: #76c4ae; }
+     #top
+     { flex-wrap: wrap;
+       justify-content: space-between; }
+     #top .left
+     { font-weight: 700; }
+     #bot
+     { justify-content: space-between; }
+     .left, .right
+     { padding: 0 5px; }
+     canvas
+     { flex: 1;
+       background: #bee9e4; }
     </style>
   </head>
-  <body>
+  <body onLoad="world_init();" onResize="world_reset();">
     <div id="emergence">
       <div id="top">
         <div class="left">emergence</div>
-        <div class="right">help</div>
+        <div class="right"><em>params: <strong>n</strong>um, <strong>f</strong>ps, pt-radiu<strong>z</strong>, <strong>d</strong>ensity, <strong>a</strong>lpha, <strong>b</strong>eta, <strong>g</strong>amma (eg. <code>http://…?n=100&d=6.5</code>)</em></div>
       </div>
-      <canvas></canvas>
+      <canvas onClick="canvas_toggle();"></canvas>
       <div id="bot">
-        <div id="right">
-          <a href="https://github.com/agarick/mff/tree/master/emergence">source</a>
+        <div class="left"><em><strong>space</strong> or <strong>click</strong> to pause/resume</em></div>
+        <div class="right">
+          <a href="https://www.nature.com/articles/srep37969">paper</a>, <a href="https://github.com/agarick/mff/tree/master/emergence">source</a>
         </div>
       </div>
     </div>
