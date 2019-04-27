@@ -1,3 +1,388 @@
 * deck
 
-minimal FORTH interpreter
+A basic FORTH interpreter in C++.
+
+** Try
+
+First ...:
+- clone https://github.com/agarick/mff (or download zip, etc.)
+- =cd mff/deck=
+
+... then build:
+- =make=
+
+... then run as REPL:
+- =./deck=
+
+... or run with files:
+- =touch sample.4th= (edit it, etc.)
+- =./deck -f sample.4th=
+
+** Overview
+- DECK is an interpreter that understands a subset of FORTH (ie. word definition, conditional, do-loop, and a few primitives).
+- [[https://github.com/yhirose/cpp-linenoise][linenoise]] is used for history and input interaction.
+- Processes rely heavily on global variables.
+- Not implemented: different kinds of loops, precise manipulation of numbers, variables, arrays, i/o.
+
+*** Usage
+
+#+BEGIN_SRC
+deck [OPTIONS]
+  -?, -h   this help
+  -p       disable prompt
+  -f FILE  interpret FILE
+#+END_SRC
+
+*** Structure
+
+**** Files
+
+#+BEGIN_SRC
+main.cpp   REPL; option handling; load native definitions
+deck.hpp   global variables; utility functions for strings, stacks, and maps
+dict.hpp   define; forget
+nat.hpp    native definitions
+state.hpp  core modification of global state by looking at current word and state flag
+#+END_SRC
+
+**** Data
+
+#+BEGIN_SRC
+STATE  enum                    flag that controls how the current word should be parsed/evaluated
+DATA   [string]                the main stack
+WORK   [string]                temporary stack for conditionals, loops, etc.
+NAT    map<string,lambda>      native definition of words
+DICT   map<string,[[string]]>  user definition of words
+OPT    map<string,string>      DECK options
+DEF_*, DO_*, STR               holder/worker variables for their corresponding modes
+#+END_SRC
+
+** Tutorial
+
+*** start
+
+Greetings, *decker*.
+
+DECK is a basic (toy) interpreter that implements a subset of *FORTH*. If you aren't familiar with FORTH, please take a look at https://en.wikipedia.org/wiki/Forth_(programming_language) or the excellent book https://www.forth.com/starting-forth/ for an introduction to the language. DECK follows the main concepts of FORTH but does not attempt to adhere strictly to FORTH's precise behavior or standards.
+
+Before we begin, make sure you have a compiled DECK *executable* (see *[[#try][Try]]* section above).
+
+Assuming you are on a *nix machine, go to the directory with DECK, and run =./deck= to start the interpreter.
+
+*** the repl
+
+- prompt ::
+
+#+BEGIN_SRC
+0:s0:d36> 
+#+END_SRC
+
+- The first number refers to the number of entries in the line history. It is 0 because we haven't run any commands yet.
+- The second number, prefixed by "s", refers to the number of words on the stack.
+- Finally, the last number prefixed by "d" refers to the number of words defined in the dictionary.
+- What "word", "stack", and "dictionary" mean will be looked at shortly.
+
+- input ::
+
+Type in a command and press enter, and DECK will interpret/evaluate the command, returning immediately to waiting on your input.
+
+- quit ::
+At any time, you can *quit* DECK by typing =.q= or C-c. Or when the line is empty, C-d.
+
+*** the word & the stack
+
+- everything in DECK is a word ::
+
+=42= is a word, =foo= is a word, and =!= is a word. Some words are special, as we will see soon. And some words, like "3" and "1025.9", can be interpreted as numbers, if some operator in question is expecting a number. But otherwise, a word is just a word.
+
+Try entering the unremarkable word =7= into the REPL:
+
+#+BEGIN_SRC
+0:s0:d36> 7
+1:s1:d36> 
+#+END_SRC
+
+You can see from the prompt that the history size and stack size each increased by one.
+
+- words get pushed onto the stack ::
+
+Since the =7= you input has no special meaning (for now, at least), the word =7= has been pushed onto the stack.
+
+Okay, how about another word, =3.5=?:
+
+#+BEGIN_SRC
+1:s1:d36> 3.5
+2:s2:d36> 
+#+END_SRC
+
+- print stack ::
+
+As expected, the stack now has 2 items. You can always peek at what the stack *is holding* by entering =.s=:
+
+#+BEGIN_SRC
+2:s2:d36> .s
+WORK: ()
+DATA: (7,3.5)
+3:s2:d36> 
+#+END_SRC
+
+We see that the (DATA) stack is holding the =7= and =3.5= that we just pushed in. (Let's ignore the WORK stack for the moment.)
+
+- stack operation ::
+
+Now, just for giggles, enter the word =+=:
+
+#+BEGIN_SRC
+3:s2:d36> +
+4:s1:d36> 
+#+END_SRC
+
+The stack size decreased by one! This is because =+= is a special word that DECK has defined natively. When DECK sees the word =+=, it pops two words from the stack, checks that they are numeric, adds the numbers together, then pushes the sum back onto the stack.
+
+So then is =10.5= on the stack? Well, we could type in =.s= to print out the stack, but this time instead, let's just *pop* whatever is in there.
+
+To do so, enter =.=:
+
+#+BEGIN_SRC
+4:s1:d36> .
+10.5
+5:s0:d36> 
+#+END_SRC
+
+Yep, 7 + 3.5 is 10.5 indeed.
+
+*** whitespace
+
+Instead of inputting one word at a time, we could have typed in everything on a single line:
+
+#+BEGIN_SRC
+5:s0:d36> 7 3.5 + .
+10.5
+6:s0:d36> 
+#+END_SRC
+
+DECK ignores whitespace, so the single line behaves exactly as it did inputting a word at a time.
+
+*** history
+
+Our stack size is now empty, but the history size has been steadily increasing.
+
+- print history ::
+
+History is useful; we can enter =.h= to see all the lines of commands we've input so far.
+
+#+BEGIN_SRC
+6:s0:d36> .h
+HISTORY (7 lines)
+1  7
+2  3.5
+3  .s
+4  +
+5  .
+6  7 3.5 + .
+7  .h
+7:s0:d36> 
+#+END_SRC
+
+Great. And we can *go back to a line* we wrote earlier by pressing up or C-p however many times we'd like.
+
+*** definition
+
+Let's go back to the special word =+= we met earlier. Like =+=, DECK predefines several special words out-of-the-box, which you can see in the *[[#glossary-of-native-words][Glossary]]* section below.
+
+But you can *define* your own word with =:=.
+
+- an exercise ::
+
+Well, let's visit a short exercise given in the Starting Forth book. To start with, there is the =spaces= word that expects an integer and behaves intuitively:
+
+#+BEGIN_SRC
+7:s0:d36> 15 spaces
+               8:s0:d36> 
+#+END_SRC
+
+Then there is =emit=, which prints a character according to its ascii code (notice the asterisk emitted on the last line):
+
+#+BEGIN_SRC
+               8:s0:d36> 42 emit
+*9:s0:d36> 
+#+END_SRC
+
+And there is =cr=, which prints a newline:
+
+#+BEGIN_SRC
+*9:s0:d36> cr
+
+10:s0:d36> 
+#+END_SRC
+
+We can define a "star": (note that DECK is *case-sensitive* with regards to word names, unlike in the book)
+
+#+BEGIN_SRC
+10:s0:d36> : star 42 emit ;
+11:s0:d37> 
+#+END_SRC
+
+The size of the dictionary hints at us that our "star" has been successfully defined.
+
+Check by entering =star=:
+
+#+BEGIN_SRC
+11:s0:d37> star
+*12:s0:d37> 
+#+END_SRC
+
+I'll just write out the rest of the exercise.
+
+#+BEGIN_SRC
+*12:s0:d37> cr star cr star cr star
+
+*
+*
+*13:s0:d37> : margin cr 20 spaces ;
+14:s0:d38> : blip margin star ;
+15:s0:d39> : stars 0 do star loop ;
+16:s0:d40> : bar margin 5 stars ;
+17:s0:d41> : F bar blip bar blip blip cr ;
+18:s0:d42> F
+
+                    *****
+                    *
+                    *****
+                    *
+                    *
+19:s0:d42> 
+#+END_SRC
+
+Cool. F.
+
+- print dictionary ::
+
+You can browse the dictionary with the =.d= word:
+
+#+BEGIN_SRC
+19:s0:d42> .d
+NATIVE (36 defs)
+(
+*
+  [... skipped ...]
+spaces
+swap
+
+USER (6 defs)
+F :     bar blip bar blip blip cr
+bar :   margin 5 stars
+blip :  margin star
+margin :        cr 20 spaces
+star :  42 emit
+stars : 0 do star loop
+20:s0:d42> 
+#+END_SRC
+
+Wait, what about that definition of =stars= over there? Yes, =stars= is using a do-loop -- let's take a closer look.
+
+*** do-loop & if-else-then
+
+- do-loop ::
+
+The =_ _ do _ loop= form grants us a *looping* mechanism. The =do= word expects two numbers on the stack which act as the "index" and "control" respectively (respective in a right-to-left manner).
+
+So =3 0 do _ loop= behaves like C's =for (int i = 0; i < 3; ++i) _=:
+
+#+BEGIN_SRC
+20:s0:d42> 3 0 do i 2 * . loop
+0
+2
+4
+21:s0:d42> 
+#+END_SRC
+
+- loop body ::
+
+The "body" of the loop =i 2 * .= is effectively repeating 3 times. Also note the use of the special word =i= that stands in for the iteration counter.
+
+Looping is made possible through a temporary (WORK) stack that remembers the loop body.
+
+- if-else-then ::
+
+Another form that DECK implements using the WORK stack is the *conditional*:
+
+#+BEGIN_SRC
+21:s0:d42> 5 2 > if ." five " else ." two " then .
+five
+22:s0:d42> 
+#+END_SRC
+
+- if-then ::
+
+Also this:
+
+#+BEGIN_SRC
+23:s0:d42> 2 5 > if ." five " then .
+24:s0:d42> 
+#+END_SRC
+
+Due to the centrality of the stack, conditionals work in a somewhat less intuitive way than in other languages.
+
+- comparison ::
+
+*Comparison* is accomplished with the word =0= and some numeric word other than =0=. So, in the above example, =>= returns =1= since the second-to-top word on the stack is greater than the top word (ie. 5 > 2). So =5 2 >= gets translated into =1=. =if= then sees this word and evaluates the consequent branch. If there was a =0= on the top of the stack instead, =if= would evaluate the alternate branch.
+
+The decision to evaluate the correct branch is, again, made possible with the presence of the secondary WORK stack.
+
+*** strings
+
+A *string* is another "variant" of a word -- one that allows whitespace. The form to use is =.″ _ ″= or =.″ _″= (ie. the whitespace before the last double-quote is optional):
+
+#+BEGIN_SRC
+24:s0:d42> ." hi world " .
+hi world
+25:s0:d42> 
+#+END_SRC
+
+- string shortcomings ::
+
+DECK currently does not support multiline strings (a string must be typed out in a single line) or using a string as the name for a new definition.
+
+*** end of Tutorial
+
+** Glossary of native words
+
+| word     | behavior ("first" means top of stack)       |
+|----------+---------------------------------------------|
+| =(=      | switch to comment state                     |
+| =.″=     | switch to str state                         |
+| =:=      | switch to def state                         |
+| =do=     | switch to loop state                        |
+| =forget= | switch to forget state                      |
+| =if=     | switch to alt or cond state                 |
+| =.?=     | print help                                  |
+| =.c=     | clear data stack                            |
+| =.d=     | print (native and user) dictionary          |
+| =.h=     | print history                               |
+| =.s=     | print (work and data) stack                 |
+| =.v=     | print DECK version                          |
+| =*=      | product of first and second                 |
+| =+=      | sum of first and second                     |
+| =-=      | difference of first from second             |
+| =/=      | division of first from second               |
+| =/mod=   | quotient and remainder of first from second |
+| =.=      | pop and print                               |
+| =2drop=  | drop pair                                   |
+| =2dup=   | duplicate pair                              |
+| =2over=  | copy over second pair                       |
+| =2swap=  | swap two pairs                              |
+| =\==     | equality of first to second                 |
+| =<=      | second less than first                      |
+| =>=      | second greater than first                   |
+| =cr=     | print empty line                            |
+| =drop=   | drop first                                  |
+| =dup=    | duplicate first                             |
+| =emit=   | print character (number)                    |
+| =empty=  | forget all user-defined words in dictionary |
+| =mod=    | remainder of first from second              |
+| =over=   | copy over second                            |
+| =rot=    | bring third to top                          |
+| =space=  | print space                                 |
+| =spaces= | print space a number of times               |
+| =swap=   | swap two                                    |
