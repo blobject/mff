@@ -95,7 +95,7 @@ At any time, you can *quit* DECK by typing =.q= or C-c. Or when the line is empt
 
 =42= is a word, =foo= is a word, and =!= is a word. Some words are special, as we will see soon. And some words, like "3" and "1025.9", can be interpreted as numbers, if some operator in question is expecting a number. But otherwise, a word is just a word.
 
-Try entering the unremarkable word =7= into the REPL:
+Try entering the unremarkable word =7= (ie. the number seven) into the REPL:
 
 #+BEGIN_SRC
 0:s0:d36> 7
@@ -106,7 +106,7 @@ You can see from the prompt that the history size and stack size each increased 
 
 - words get pushed onto the stack ::
 
-Since the =7= you input has no special meaning (for now, at least), the word =7= has been pushed onto the stack.
+Since the =7= you input has no special meaning (for now, at least), it has been pushed onto the stack.
 
 Okay, how about another word, =3.5=?:
 
@@ -139,7 +139,7 @@ Now, just for giggles, enter the word =+=:
 
 The stack size decreased by one! This is because =+= is a special word that DECK has defined natively. When DECK sees the word =+=, it pops two words from the stack, checks that they are numeric, adds the numbers together, then pushes the sum back onto the stack.
 
-So then is =10.5= on the stack? Well, we could type in =.s= to print out the stack, but this time instead, let's just *pop* whatever is in there.
+So then is the sum =10.5= on the stack? Well, we could type in =.s= like we did earlier to print out the stack, but this time instead, let's just *pop* whatever is in there.
 
 To do so, enter =.=:
 
@@ -149,7 +149,7 @@ To do so, enter =.=:
 5:s0:d36> 
 #+END_SRC
 
-Yep, 7 + 3.5 is 10.5 indeed.
+Yep, 7 + 3.5 is 10.5 indeed. And the last word on the stack has been popped.
 
 *** whitespace
 
@@ -223,7 +223,7 @@ We can define a "star": (note that DECK is *case-sensitive* with regards to word
 11:s0:d37> 
 #+END_SRC
 
-The size of the dictionary hints at us that our "star" has been successfully defined.
+The increase in dictionary size hints to us that our "star" has been successfully defined.
 
 Check by entering =star=:
 
@@ -326,7 +326,7 @@ Due to the centrality of the stack, conditionals work in a somewhat less intuiti
 
 - comparison ::
 
-*Comparison* is accomplished with the word =0= and some numeric word other than =0=. So, in the above example, =>= returns =1= since the second-to-top word on the stack is greater than the top word (ie. 5 > 2). So =5 2 >= gets translated into =1=. =if= then sees this word and evaluates the consequent branch. If there was a =0= on the top of the stack instead, =if= would evaluate the alternate branch.
+*Comparison* is accomplished with the word =0= and some numeric word other than =0=. So, in the above example, =>= returns =1= since the second-to-top word on the stack is greater than the top word (ie. 5 > 2). So =5 2 >= gets translated into =1=. =if= then sees this word and evaluates the consequent branch. If there was a =0= on the top of the stack instead, =if= would have evaluated the alternate branch.
 
 The decision to evaluate the correct branch is, again, made possible with the presence of the secondary WORK stack.
 

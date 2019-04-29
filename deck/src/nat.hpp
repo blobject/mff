@@ -332,7 +332,7 @@ babble =
 
   {".v",
    []() {
-     std::cout << "deck version " << VERSION << std::endl;
+     std::cout << "DECK version " << VERSION << std::endl;
    }},
 };
 

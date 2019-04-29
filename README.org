@@ -1,7 +1,7 @@
 * mff uk
 
 - nprg005 (non-procedural) ::
-  - *[[npp][prolog & haskell]]*
+  - *[[npp][npp]]*
 
 - nprg041 (c++) ::
   - *[[array][array]]*

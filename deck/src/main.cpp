@@ -74,18 +74,14 @@ int
 prep(const int argc, char** argv)
 {
   int ok;
-  if ((ok = opt(argc, argv)) > 0)
+  if ((ok = opt(argc, argv)) != 0)
   {
-    return 1;
-  }
-  if (ok < 0)
-  {
-    return -1;
+    return ok;
   }
 
   for (auto const entry: babble)
   {
-    NAT.insert(pair<string,function<void()>>(entry.first, entry.second));
+    NAT.insert(entry);
   }
 
   linenoise::SetHistoryMaxLen(stoi(OPT.at("limit")));
@@ -116,15 +112,16 @@ string
 motd(void)
 {
   ostringstream s;
-  s << " .----------------------------------------.\n"
-    << " | DECK v" << VERSION << "                              |\n"
-    << " |                                        |\n"
-    << " | - DECK is a basic FORTH interpreter.   |\n"
-    << " | - To quit, type \".q\", C-d, or C-c.     |\n"
-    << " | - For help, type \".?\".                 |\n"
-    << " | - The prompt shows sizes of the        |\n"
-    << " |   history, stack, and dictionary.      |\n"
-    << " '----------------------------------------'"
+  s << " .--------------------------------------.\n"
+    << " | DECK v" << VERSION
+    << string(31 - VERSION.size(), ' ') << "|\n"
+    << " |                                      |\n"
+    << " | - DECK is a basic FORTH interpreter. |\n"
+    << " | - To quit, type \".q\", C-d, or C-c.   |\n"
+    << " | - For help, type \".?\".               |\n"
+    << " | - The prompt shows sizes of the      |\n"
+    << " |   history, stack, and dictionary.    |\n"
+    << " '--------------------------------------'"
     << std::endl;
 
   return s.str();

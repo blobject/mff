@@ -23,6 +23,8 @@ using std::vector;
 ////////////////////////////////////////////////////////////////////////
 // globals
 
+const string VERSION = "0.2";
+
 enum class     S {none, comm, def, comp, fgt, str, cond, alt, loop};
 S              STATE; // stack behavior & lexical control
 vector<string> DATA;  // main stack
@@ -34,10 +36,9 @@ map<string,vector<vector<string>>> DICT; // "worded" words
 string         DEF_word;    // : WORD ... ;
 vector<string> DEF_meaning; // : w MEANING ;
 string         STR;         // ." STR "
-size_t         DO_index;    // u INDEX do ... loop
-size_t         DO_ctrl;     // CTRL  f do ... loop
+size_t         DO_index;    // c INDEX do ... loop
+size_t         DO_ctrl;     // CTRL  i do ... loop
 
-const string VERSION = "0.2";
 map<string,string> OPT = // DECK options
 {{"files", ""},
  {"limit", "4096"},
