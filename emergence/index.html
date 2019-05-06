@@ -5,45 +5,211 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <style>
-     body
-     { margin: 0; }
-     #emergence
-     { display: flex;
-       flex-direction: column;
-       align-items: stretch;
-       align-content: stretch; }
-     #top, #bot
-     { display: flex;
-       flex-direction: row;
-       background: #76c4ae; }
-     #top
-     { flex-wrap: wrap;
-       justify-content: space-between; }
-     #top .left
-     { font-weight: 700; }
-     #bot
-     { justify-content: space-between; }
-     .left, .right
-     { padding: 0 5px; }
-     canvas
-     { flex: 1;
-       background: #bee9e4; }
+      body
+      { margin: 0; }
+      canvas
+      { flex: 1;
+        background: #bee9e4; }
+      #emergence
+      { display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        align-content: stretch; }
+      #bar
+      { display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        align-items: center;
+        justify-content: space-between;
+        background: #76c4ae;
+        line-height: 39px;
+        margin: 0;
+        padding: 0 .5em; }
+      #bar input[type="button"]
+      { font-size: 13px;
+        font-weight: 700;
+        margin: 0 .4em; }
+      #bar span.param
+      { margin: 0 .2em; }
+      #bar span.param input
+      { font-size: 14px;
+        width: 4em; }
+      #bar-left, #bar-right
+      { white-space: nowrap; }
+      #bar-left
+      { margin-right: .2em; }
+      #bar-left div.modal
+      { white-space: normal; }
+      #button-open
+      { display: none;
+        opacity: 0;
+        visibility: hidden; }
+      div.modal
+      { position: fixed;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        opacity: 0;
+        visibility: hidden; }
+      div.modal-box
+      { position: absolute;
+        top: 50%;
+        left: 50%;
+        max-width: 75%;
+        max-height: 75%;
+        transform: translate(-50%, -50%);
+        display: flex;
+        flex-direction: column;
+        background-color: #fff;
+        border: 4px solid #444;
+        padding: .5em 1em; }
+      div.modal-head
+      { display: flex;
+        justify-content: space-between;
+        margin: 0 0 0 -.5em; }
+      div.modal-body
+      { line-height: 1.5em;
+        overflow-y: auto;
+        padding-bottom: 10px; }
+      div.modal-body pre
+      { line-height: 1.2em; }
+      div.modal-body textarea
+      { width: 400px;
+        height: 200px;
+        border: 1px dashed #bbb;
+        margin-bottom: 8px; }
+      div.modal-close
+      { font-size: 14px;
+        color: #666;
+        cursor: pointer;
+        border: 2px solid #aaa;
+        margin: 0;
+        padding: 2px 6px;
+        height: 1.5em;
+        line-height: 1.5em; }
+      div.modal-close:focus, div.modal-close:hover
+      { background-color: #ddd;
+        color: #000;
+        border: 2px solid #444; }
+      span.modal-title
+      { font-size: 15px;
+        font-weight: 700; }
+      div.modal.help ul
+      { margin: 0;
+        padding-left: 24px; }
+      div.modal.help div.modal-body
+      { font-size: 13px;
+        padding-bottom: 0; }
+      span.message.load, span.message.save
+      { font-size: 13px; }
+      span.message.good
+      { color: green; }
+      span.message.bad
+      { color: red; }
+      div.modal-show
+      { opacity: 1 !important;
+        visibility: visible !important; }
+      input.button-show
+      { display: inline-block !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        margin-bottom: .5em !important; }
     </style>
   </head>
-  <body onLoad="world_init();" onResize="world_reset();">
+  <body onLoad="B.init();" onResize="B.resize();">
     <div id="emergence">
-      <div id="top">
-        <div class="left">emergence</div>
-        <div class="right"><em>params: <strong>n</strong>um, <strong>f</strong>ps, pt-radiu<strong>z</strong>, <strong>d</strong>ensity, <strong>a</strong>lpha, <strong>b</strong>eta, <strong>g</strong>amma (eg. <code>http://…?n=100&d=6.5</code>)</em></div>
-      </div>
-      <canvas onClick="canvas_toggle();"></canvas>
-      <div id="bot">
-        <div class="left"><em><strong>space</strong> or <strong>click</strong> to pause/resume</em></div>
-        <div class="right">
-          <a href="https://www.nature.com/articles/srep37969">paper</a>, <a href="https://github.com/agarick/mff/tree/master/emergence">source</a>
+      <div id="bar">
+        <div id="bar-left">
+          <input type="button" id="button-pause" value="PAUSE" onClick="B.toggle()">
+          <input type="button" id="button-help" value="HELP" onClick="D.modal_help()">
+          <div class="modal help">
+            <div class="modal-box">
+              <div class="modal-head">
+                <div class="modal-close" onClick="D.modal_help()">close</div>
+                <span class="modal-title">HELP</span>
+              </div>
+              <div class="modal-body">
+                <strong><em>Emergence</em> usage:</strong>
+                <ul>
+                  <li><em>PAUSE/RESUME:</em> pause/resume animation</li>
+                  <li><em>LOAD:</em> load in user input state</li>
+                  <li><em>SAVE:</em> save current state</li>
+                  <li><em>APPLY:</em> modify the following parameters:
+                    <ul>
+                      <li><em>f:</em> (int) frames per second of animation</li>
+                      <li><em>n:</em> (int) number of particles</li>
+                      <li><em>z:</em> (int) radius of particle</li>
+                      <li><em>d:</em> (float) density of particle neighborhoods</li>
+                      <li><em>&alpha;:</em> (float) self-dependent direction</li>
+                      <li><em>&beta;:</em> (float) neighbor-dependent direction</li>
+                      <li><em>&gamma;:</em> (float) neighbor-based speed multiplier</li>
+                    </ul>
+                  </li>
+                  <li><em>The state:</em> is a snapshot of world parameters and particle properties (understood to be in JSON format):
+                    <ul>
+                      <li>{ f, n, z, d, a, b, g }</li>
+                    </ul>
+                  </li>
+                  <li><strong><em>note:</em></strong> setting parameters or loading state initialises the world from scratch.</li>
+                </ul>
+                <p><strong>about:</strong> <em>Emergence</em> is a visualiser of "primordial particle systems", as explained in the following article.</p>
+                <p><strong>article:</strong> by Schmickl, Stefanec, Crailsheim, <a href="https://www.nature.com/articles/srep37969">https://www.nature.com/articles/srep37969</a></p>
+                <p><strong>source code:</strong> <a href="https://github.com/agarick/mff/tree/master/emergence">https://github.com/agarick/mff/tree/master/emergence</a></p>
+              </div>
+            </div>
+          </div>
+          <input type="button" id="button-load" value="LOAD" onClick="D.modal_load()">
+          <div class="modal load">
+            <div class="modal-box">
+              <div class="modal-head">
+                <div class="modal-close" onClick="D.modal_load()">close</div>
+                <span class="modal-title">LOAD</span>
+              </div>
+              <div class="modal-body">
+                <textarea class="textarea load" placeholder="Please input the state, in JSON format"></textarea>
+                <br>
+                <input type="file" id="button-open-real" name="file" style="display: none;">
+                <input type="button" id="button-open" value="READ IN FILE" onClick="document.getElementById('button-open-real').click();">
+                <br>
+                <input type="button" id="button-apply-load" value="APPLY" onClick="D.button_apply_load()">
+                <span class="message load"></span>
+              </div>
+            </div>
+          </div>
+          <input type="button" id="button-save" value="SAVE" onClick="D.modal_save()">
+          <div class="modal save">
+            <div class="modal-box">
+              <div class="modal-head">
+                <div class="modal-close" onClick="D.modal_save()">close</div>
+                <span class="modal-title">SAVE</span>
+              </div>
+              <div class="modal-body">
+                <textarea class="textarea save"></textarea>
+                <br>
+                <input type="button" id="button-save" value="COPY STATE" onClick="D.button_copy()">
+                <span class="message save"></span>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+        <div id="bar-right">
+          <input type="button" id="button-apply-bar" value="APPLY" onClick="D.button_apply_bar()">
+	        <span class="param">f: <input type="number" id="param_f" value="30"></span>
+	        <span class="param">n: <input type="number" id="param_n" value="2000"></span>
+	        <span class="param">z: <input type="number" id="param_z" value="5"></span>
+	        <span class="param">d: <input type="number" id="param_d" value="8.0"></span>
+	        <span class="param">&alpha;: <input type="number" id="param_a" value="180"></span>
+	        <span class="param">&beta;: <input type="number" id="param_b" value="17"></span>
+	        <span class="param">&gamma;: <input type="number" id="param_g" value="0.134"></span>
+        </div>
+	    </div>
+      <canvas onClick="B.toggle();"></canvas>
     </div>
-    <script src="emergence.js"></script>
+    <script src="core.js"></script>
+    <script src="bridge.js"></script>
+    <script src="draw.js"></script>
+    <script src="util.js"></script>
   </body>
 </html>
