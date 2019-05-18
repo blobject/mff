@@ -3,104 +3,201 @@
 // for : nprg045
 
 ////////////////////////////////////////////////////////////////////////
-// connect core (E) to draw (D)
+// middleman between CORE and VIEW
 
-let B =
+let BRDG =
 {
 
+  // Initialise everything.
+  // - Entry point for View (ie. HTML).
   init: function ()
   {
-    // initialise draw
-    D.init();
-    let c = D.get_canvas();
-    W.canvas = c.canvas;
-    W.c = c.context;
-    B.measure();
+    // Initialise world
+    let c = VIEW.get_canvas();
+    WORLD.canvas = c.canvas;
+    WORLD.c = c.context;
+    BRDG.measure();
 
-    // initialise core
-    E.init();
-    U.prep(S);
-    B.resume();
+    // Initialise Model
+    CORE.init();
 
-    if (DEBUG) U.debug_params(W, S);
+    // Initialise View
+    VIEW.init();
+    VIEW.put_params(CORE.get_params());
+
+    // Go!
+    BRDG.resume();
+
+    if (DEBUG) UTIL.debug_params(WORLD, STATE);
   },
 
+  // Retrieve and world-set canvas dimensions.
   measure: function ()
   {
-    let dim = D.get_dimensions(W.gap);
-    W.canvas.width = dim.w;
-    W.canvas.height = dim.h;
-    W.w = dim.w;
-    W.h = dim.h;
-    W.w2 = W.w / 2;
-    W.h2 = W.h / 2;
+    let dim = VIEW.get_dimensions(WORLD.gap);
+    WORLD.canvas.width = dim.w;
+    WORLD.canvas.height = dim.h;
+    WORLD.w = dim.w;
+    WORLD.h = dim.h;
+    WORLD.whalf = WORLD.w / 2;
+    WORLD.hhalf = WORLD.h / 2;
   },
 
+  // Handle canvas resize event.
   resize: function ()
   {
-    B.measure();
-    E.init();
-    B.pause();
-    D.say_restart();
+    BRDG.pause();
+    BRDG.measure();
+    BRDG.set_tick(0);
+    VIEW.slider_set(0);
+    VIEW.put_params(CORE.get_params());
+    VIEW.put_start();
+    CORE.init();
   },
 
-  resume: function ()
-  {
-    if (W.paused)
-    {
-      B.toggle();
-    }
-  },
-
-  pause: function ()
-  {
-    if (!W.paused)
-    {
-      B.toggle();
-    }
-  },
-
+  // Handle toggle (either pause or resume).
   toggle: function ()
   {
-    D.toggle(W.paused, E.tick, W.fps);
-    if (W.paused)
+    VIEW.toggle(WORLD.paused, CORE.tick, STATE.fps);
+    if (WORLD.paused)
     {
-      W.paused = false;
+      WORLD.paused = false;
     }
     else
     {
-      W.paused = true;
+      WORLD.paused = true;
     }
   },
 
-  paint: function ()
+  // Handle resume (unpause) event.
+  resume: function ()
   {
-    let w = W;
-    let s = S;
-    D.paint(w.c, P, s.n, w.w, w.h, s.z, B.hue, s.x, w.t[0]);
+    if (WORLD.paused)
+    {
+      if (WORLD.tick < WORLD.hbsz)
+      {
+        VIEW.slider_disable();
+      }
+      BRDG.toggle();
+    }
   },
 
+  // Handle pause (unresume) event.
+  pause: function ()
+  {
+    if (!WORLD.paused)
+    {
+      BRDG.toggle();
+    }
+  },
+
+  // On every tick, register the state onto the history.
+  tally: function () // TODO: testing & bug-bashing required
+  {
+    // SKETCH:
+    //   Every k(=100) ticks, the buffer gets (lossily) squashed into
+    //   the history proper, the latter of which is represented by the
+    //   slider. This means that the second half of the slider is
+    //   always very recent, whereas the first half gets more and more
+    //   lossy and compressed.
+    //
+    // k=1         k=100       k=200
+    //  .___________.___________.
+    //        H0          B0    *0
+    //
+    //             k=200       k=300
+    //  ._____._____.___________.
+    //     H0    B0 *0          *1
+    //        H1          B1
+    //
+    //             k=300       k=400
+    //  .__.__._____.___________.
+    //   H0 B0   B1 *1
+    //        H2          B2
+
+    let w = WORLD;
+    let s = CORE.get_snapshot();
+    let h = HIST;
+    let k = w.tick;
+    let z = w.hbsz;
+    let tick = k % z;
+
+    // Update by merging in buffer
+    if (tick === 0)
+    {
+      // HTML slider is disabled by default and only gets enabled when
+      // `tick` passes `hbsz`.
+      if (k === z)
+      {
+        VIEW.slider_set(100);
+        VIEW.slider_enable();
+      }
+      else
+      {
+        // Squash buffer into history proper
+        for (let i = 0; i < z / 2; i++)
+        {
+          h.snaps[i] = h.snaps[i * 2];
+        }
+        for (let i = 0; i < z / 2; i++)
+        {
+          h.snaps[i + z / 2] = h.buf[i * 2];
+        }
+      }
+      // Don't forget the last index which does not get squashed
+      h.snaps[z - 1] = s;
+    }
+
+    // Populate history proper (when k < 100) then populate buffer (when
+    // k = 100).
+    else
+    {
+      if (k < z)
+      {
+        VIEW.slider_set(k);
+        h.snaps[k - 1] = s;
+      }
+      else
+      {
+        h.buf[tick - 1] = s;
+      }
+    }
+  },
+
+  // Call View's drawing function.
+  paint: function ()
+  {
+    let w = WORLD;
+    let s = STATE;
+    VIEW.paint(w.c, PTS, s.num, w.w, w.h, s.psz, BRDG.hue, w.crowd,
+               w.theme);
+  },
+
+  // Given a particular neighborhood size, and a global average
+  // neighborhood size, determine the color.
+  // - Caching is used for performance optimisation.
   hue: function (n, avg, theme)
   {
-    let h = W.x;
+    let h = WORLD.hues;
+
     if (h[n] === undefined)
     {
       let c;
       if (n <= avg)
       {
-        c = theme[2];
+        c = theme[3];
       }
       else if (n <= 2 * avg)
       {
-        c = theme[3];
-      }
-      else if (n <= 5 * avg)
-      {
         c = theme[4];
+      }
+      else if (n <= 4 * avg)
+      {
+        c = theme[5];
       }
       else
       {
-        c = theme[5];
+        c = theme[6];
       }
       h[n] = c;
     }
@@ -108,71 +205,140 @@ let B =
     return h[n];
   },
 
+  // Hand over non-user-controllable portion of world state.
   get_world: function ()
   {
-    return W;
+    return WORLD;
   },
 
+  // Hand over user-controllable portion of world state.
   get_state: function ()
   {
-    return S;
+    return STATE;
   },
 
+  // Hand over default `STATE`.
+  get_state_default: function ()
+  {
+    return STATED;
+  },
+
+  // Hand over history.
+  get_history: function ()
+  {
+    return HIST;
+  },
+
+  // Hand over particles.
   get_pts: function ()
   {
-    return P;
+    return PTS;
   },
 
-  get_save: function ()
+  // Hand over parameter name listing.
+  get_abbrev: function ()
   {
-    let s = JSON.parse(JSON.stringify(S)); // clone
-    U.unprep(s);
-    s.p = [];
-    let p;
-    for (let i = 0; i < s.n; i++)
-    {
-      p = P[i];
-      s.p[i] =
-      {
-        n: i + 1,
-        x: p.x,
-        y: p.y,
-        f: p.f,
-      };
-    }
-    return s;
+    return ABBREV;
   },
 
+  // Set alpha/beta configuration.
+  get_config: function (c)
+  {
+    return CONFIGS[c];
+  },
+
+  // Set color theme.
+  set_theme: function (theme)
+  {
+    WORLD.theme = COLORS[theme];
+    return WORLD.theme;
+  },
+
+  // Set initial particle distribution scheme.
+  set_distr: function (distr)
+  {
+    STATE.distr = distr;
+    return distr;
+  },
+
+  // Set global tick (ie. frame of animation).
+  set_tick: function (tick)
+  {
+    WORLD.tick = tick;
+  },
+
+  // Make View alert user regarding `stop`.
+  put_stop_alert: function ()
+  {
+    VIEW.put_stop_alert();
+  },
+
+  clear_theme_cache: function ()
+  {
+    WORLD.hues = [];
+  },
+
+  // Given a partial or complete state object in abbreviated form,
+  // set the global state.
   load: function (o)
   {
-    U.unprep(S);
-    if (o.f) W.fps = o.f;
-    if (o.n) S.n = o.n;
-    if (o.z) S.z = o.z;
-    if (o.d) S.d = o.d;
-    if (o.a) S.a = o.a;
-    if (o.b) S.b = o.b;
-    if (o.g) S.g = o.g;
+    let a = ABBREV;
+    let s = STATE;
+
+    // Set global state.
+    UTIL.for_abbrev(a, function (key)
+    {
+      if (o[key])
+      {
+        s[a[key]] = o[key];
+      }
+    })
+
+    // Optionally set radians squared
+    if (o.r)
+    {
+      WORLD.radsq = o.r * o.r;
+    }
+
+    // Set particles
+    let np = new Array(s.num);
+    let nl;
+
     if (o.p)
     {
-      // S.n has precedence over o.p.length
-      let np = new Array(S.n);
+      // STATE.num has precedence over o.p.length
       let p;
-      for (let i = 0; i < (o.p.length > S.n ? S.n : o.p.length); i++)
+      for (let i = 0; i < (o.p.length > s.num ? s.num : o.p.length);
+           i++)
       {
         p = o.p[i];
-        np[i] = new E.Pt(p.x, p.y, p.f);
+        np[i] = new CORE.Pt(p.x, p.y, p.phi);
         np[i].n = 0;
         np[i].l = 0;
         np[i].r = 0;
-        np[i].s = SIN(p.f);
-        np[i].c = COS(p.f);
+        np[i].s = Math.sin(p.phi);
+        np[i].c = Math.cos(p.phi);
       }
-      for (let i = o.p.length; i < S.n; i++)
-      {
-        np[i] = new E.Pt();
-      }
-      P = np;
+      nl = o.p.length;
     }
+
+    else
+    {
+      for (let i = 0; i < s.num; i++)
+      {
+        np[i] = PTS[i];
+      }
+      nl = PTS.length;
+    }
+
+    // If new STATE.num is greater than either o.p.length (if provided)
+    // or the previous PTS.length.
+    for (let i = nl; i < s.num; i++)
+    {
+      np[i] = new CORE.Pt();
+    }
+
+    PTS = np;
   },
 };
+
