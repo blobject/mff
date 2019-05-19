@@ -165,11 +165,11 @@ DECK ignores whitespace, so the single line behaves exactly as it did inputting 
 
 *** history
 
-Our stack size is now empty, but the history size has been steadily increasing.
+Our stack size is now empty, but the history size has been steadily increasing, as expected. We can always revisit the history.
 
 - print history ::
 
-History is useful; we can enter =.h= to see all the lines of commands we've input so far.
+Enter =.h= to see all the lines of commands we've input so far.
 
 #+BEGIN_SRC
 6:s0:d36> .h
@@ -194,14 +194,14 @@ But you can *define* your own word with =:=.
 
 - an exercise ::
 
-Well, let's visit a short exercise given in the Starting Forth book. To start with, there is the =spaces= word that expects an integer and behaves intuitively:
+To practice defining words, let's visit a short exercise given in the Starting Forth book. To start with, there is the native =spaces= word that expects an integer and behaves intuitively:
 
 #+BEGIN_SRC
 7:s0:d36> 15 spaces
                8:s0:d36> 
 #+END_SRC
 
-Then there is =emit=, which prints a character according to its ascii code (notice the asterisk emitted on the last line):
+There is also =emit=, which prints a character according to its ascii code (notice the asterisk emitted on the last line):
 
 #+BEGIN_SRC
                8:s0:d36> 42 emit
@@ -216,7 +216,7 @@ And there is =cr=, which prints a newline:
 10:s0:d36> 
 #+END_SRC
 
-We can define a "star": (note that DECK is *case-sensitive* with regards to word names, unlike in the book)
+We can define a "star" (note that DECK is *case-sensitive* with regards to word names, unlike in the book):
 
 #+BEGIN_SRC
 10:s0:d36> : star 42 emit ;
@@ -225,14 +225,14 @@ We can define a "star": (note that DECK is *case-sensitive* with regards to word
 
 The increase in dictionary size hints to us that our "star" has been successfully defined.
 
-Check by entering =star=:
+But let's check by entering =star=:
 
 #+BEGIN_SRC
 11:s0:d37> star
 *12:s0:d37> 
 #+END_SRC
 
-I'll just write out the rest of the exercise.
+Now, I'll just write out the rest of the exercise.
 
 #+BEGIN_SRC
 *12:s0:d37> cr star cr star cr star
@@ -258,7 +258,7 @@ Cool. F.
 
 - print dictionary ::
 
-You can browse the dictionary with the =.d= word:
+As with the history, you can print out the dictionary with the =.d= word:
 
 #+BEGIN_SRC
 19:s0:d42> .d
@@ -285,7 +285,7 @@ Wait, what about that definition of =stars= over there? Yes, =stars= is using a 
 
 - do-loop ::
 
-The =_ _ do _ loop= form grants us a *looping* mechanism. The =do= word expects two numbers on the stack which act as the "index" and "control" respectively (respective in a right-to-left manner).
+The =_ _ do _ loop= form grants us a *looping* mechanism. The =do= word expects two numbers to be on the stack which act as the "index" and "control" respectively (respective in a right-to-left manner).
 
 So =3 0 do _ loop= behaves like C's =for (int i = 0; i < 3; ++i) _=:
 
@@ -315,7 +315,7 @@ five
 
 - if-then ::
 
-Also this:
+This works as well:
 
 #+BEGIN_SRC
 23:s0:d42> 2 5 > if ." five " then .
@@ -326,7 +326,7 @@ Due to the centrality of the stack, conditionals work in a somewhat less intuiti
 
 - comparison ::
 
-*Comparison* is accomplished with the word =0= and some numeric word other than =0=. So, in the above example, =>= returns =1= since the second-to-top word on the stack is greater than the top word (ie. 5 > 2). So =5 2 >= gets translated into =1=. =if= then sees this word and evaluates the consequent branch. If there was a =0= on the top of the stack instead, =if= would have evaluated the alternate branch.
+Comparison is accomplished with the word =0= and some numeric word other than =0=. So, in the above example, =>= returns =1= since the second-to-top word on the stack is greater than the top word (ie. 5 > 2). In other words, =5 2 >= gets translated into =1=. =if= then sees this word and evaluates the consequent branch. If there was a =0= on the top of the stack instead, =if= would have evaluated the alternate branch.
 
 The decision to evaluate the correct branch is, again, made possible with the presence of the secondary WORK stack.
 
@@ -342,47 +342,47 @@ hi world
 
 - string shortcomings ::
 
-DECK currently does not support multiline strings (a string must be typed out in a single line) or using a string as the name for a new definition.
+DECK currently does not support multiline strings (ie. a string must be typed out in a single line) or using a string as the name for a new definition.
 
 *** end of Tutorial
 
 ** Glossary of native words
 
-| word     | behavior ("first" means top of stack)       |
-|----------+---------------------------------------------|
-| =(=      | switch to comment state                     |
-| =.″=     | switch to str state                         |
-| =:=      | switch to def state                         |
-| =do=     | switch to loop state                        |
-| =forget= | switch to forget state                      |
-| =if=     | switch to alt or cond state                 |
-| =.?=     | print help                                  |
-| =.c=     | clear data stack                            |
-| =.d=     | print (native and user) dictionary          |
-| =.h=     | print history                               |
-| =.s=     | print (work and data) stack                 |
-| =.v=     | print DECK version                          |
-| =*=      | product of first and second                 |
-| =+=      | sum of first and second                     |
-| =-=      | difference of first from second             |
-| =/=      | division of first from second               |
-| =/mod=   | quotient and remainder of first from second |
-| =.=      | pop and print                               |
-| =2drop=  | drop pair                                   |
-| =2dup=   | duplicate pair                              |
-| =2over=  | copy over second pair                       |
-| =2swap=  | swap two pairs                              |
-| =\==     | equality of first to second                 |
-| =<=      | second less than first                      |
-| =>=      | second greater than first                   |
-| =cr=     | print empty line                            |
-| =drop=   | drop first                                  |
-| =dup=    | duplicate first                             |
-| =emit=   | print character (number)                    |
-| =empty=  | forget all user-defined words in dictionary |
-| =mod=    | remainder of first from second              |
-| =over=   | copy over second                            |
-| =rot=    | bring third to top                          |
-| =space=  | print space                                 |
-| =spaces= | print space a number of times               |
-| =swap=   | swap two                                    |
+| word      | behavior ("first" means top of stack)       |
+|-----------+---------------------------------------------|
+| =(=, =)=  | switch to/from comment state                |
+| =.″=, =″= | switch to/from str state                    |
+| =:=, =;=  | switch to/from def state                    |
+| =do=      | switch to loop state                        |
+| =forget=  | switch to forget state                      |
+| =if=      | switch to alt or cond state                 |
+| =.?=      | print help                                  |
+| =.c=      | clear data stack                            |
+| =.d=      | print (native and user) dictionary          |
+| =.h=      | print history                               |
+| =.s=      | print (work and data) stack                 |
+| =.v=      | print DECK version                          |
+| =*=       | product of first and second                 |
+| =+=       | sum of first and second                     |
+| =-=       | difference of first from second             |
+| =/=       | division of first from second               |
+| =/mod=    | quotient and remainder of first from second |
+| =.=       | pop and print                               |
+| =2drop=   | drop pair                                   |
+| =2dup=    | duplicate pair                              |
+| =2over=   | copy over second pair                       |
+| =2swap=   | swap two pairs                              |
+| ~=~       | equality of first to second                 |
+| =<=       | second less than first                      |
+| =>=       | second greater than first                   |
+| =cr=      | print empty line                            |
+| =drop=    | drop first                                  |
+| =dup=     | duplicate first                             |
+| =emit=    | print character (number)                    |
+| =empty=   | forget all user-defined words in dictionary |
+| =mod=     | remainder of first from second              |
+| =over=    | copy over second                            |
+| =rot=     | bring third to top                          |
+| =space=   | print space                                 |
+| =spaces=  | print space a number of times               |
+| =swap=    | swap two                                    |
