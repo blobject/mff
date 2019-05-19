@@ -1,11 +1,11 @@
-// file: bridge.js
+// file: emergence/bridge.js
 // by  : jooh@cuni.cz
 // for : nprg045
 
 ////////////////////////////////////////////////////////////////////////
 // middleman between CORE and VIEW
 
-let BRDG =
+const BRDG =
 {
 
   // Initialise everything.
@@ -13,13 +13,11 @@ let BRDG =
   init: function ()
   {
     // Initialise world
-    let c = VIEW.get_canvas();
-    WORLD.canvas = c.canvas;
-    WORLD.c = c.context;
+    Object.assign(WORLD, VIEW.get_canvas());
     BRDG.measure();
 
     // Initialise Model
-    CORE.init();
+    CORE.init(true); // fresh start
 
     // Initialise View
     VIEW.init();
@@ -28,31 +26,27 @@ let BRDG =
     // Go!
     BRDG.resume();
 
-    if (DEBUG) UTIL.debug_params(WORLD, STATE);
+    if (DEBUG) { UTIL.debug_params(WORLD, STATE); }
   },
 
   // Retrieve and world-set canvas dimensions.
   measure: function ()
   {
-    let dim = VIEW.get_dimensions(WORLD.gap);
+    const dim = VIEW.get_dimensions(WORLD.gap);
     WORLD.canvas.width = dim.w;
     WORLD.canvas.height = dim.h;
-    WORLD.w = dim.w;
-    WORLD.h = dim.h;
-    WORLD.whalf = WORLD.w / 2;
-    WORLD.hhalf = WORLD.h / 2;
+    STATE.w = dim.w;
+    STATE.h = dim.h;
+    WORLD.whalf = STATE.w / 2;
+    WORLD.hhalf = STATE.h / 2;
   },
 
   // Handle canvas resize event.
   resize: function ()
   {
-    BRDG.pause();
     BRDG.measure();
-    BRDG.set_tick(0);
-    VIEW.slider_set(0);
-    VIEW.put_params(CORE.get_params());
+    VIEW.start(CORE.get_params(), true, true, true);
     VIEW.put_start();
-    CORE.init();
   },
 
   // Handle toggle (either pause or resume).
@@ -115,12 +109,12 @@ let BRDG =
     //   H0 B0   B1 *1
     //        H2          B2
 
-    let w = WORLD;
-    let s = CORE.get_snapshot();
-    let h = HIST;
-    let k = w.tick;
-    let z = w.hbsz;
-    let tick = k % z;
+    const w = WORLD;
+    const s = CORE.get_snapshot();
+    const h = HIST;
+    const k = w.tick;
+    const z = w.hbsz;
+    const tick = k % z;
 
     // Update by merging in buffer
     if (tick === 0)
@@ -167,9 +161,9 @@ let BRDG =
   // Call View's drawing function.
   paint: function ()
   {
-    let w = WORLD;
-    let s = STATE;
-    VIEW.paint(w.c, PTS, s.num, w.w, w.h, s.psz, BRDG.hue, w.crowd,
+    const w = WORLD;
+    const s = STATE;
+    VIEW.paint(w.c, PTS, s.num, s.w, s.h, s.psz, BRDG.hue, w.crowd,
                w.theme);
   },
 
@@ -178,7 +172,7 @@ let BRDG =
   // - Caching is used for performance optimisation.
   hue: function (n, avg, theme)
   {
-    let h = WORLD.hues;
+    const h = WORLD.hues;
 
     if (h[n] === undefined)
     {
@@ -254,91 +248,22 @@ let BRDG =
     return WORLD.theme;
   },
 
-  // Set initial particle distribution scheme.
-  set_distr: function (distr)
-  {
-    STATE.distr = distr;
-    return distr;
-  },
-
   // Set global tick (ie. frame of animation).
   set_tick: function (tick)
   {
     WORLD.tick = tick;
   },
 
-  // Make View alert user regarding `stop`.
-  put_stop_alert: function ()
-  {
-    VIEW.put_stop_alert();
-  },
-
+  // Clear color theme's hue cache.
   clear_theme_cache: function ()
   {
     WORLD.hues = [];
   },
 
-  // Given a partial or complete state object in abbreviated form,
-  // set the global state.
-  load: function (o)
+  // Alert user regarding `stop`.
+  put_stop_alert: function ()
   {
-    let a = ABBREV;
-    let s = STATE;
-
-    // Set global state.
-    UTIL.for_abbrev(a, function (key)
-    {
-      if (o[key])
-      {
-        s[a[key]] = o[key];
-      }
-    })
-
-    // Optionally set radians squared
-    if (o.r)
-    {
-      WORLD.radsq = o.r * o.r;
-    }
-
-    // Set particles
-    let np = new Array(s.num);
-    let nl;
-
-    if (o.p)
-    {
-      // STATE.num has precedence over o.p.length
-      let p;
-      for (let i = 0; i < (o.p.length > s.num ? s.num : o.p.length);
-           i++)
-      {
-        p = o.p[i];
-        np[i] = new CORE.Pt(p.x, p.y, p.phi);
-        np[i].n = 0;
-        np[i].l = 0;
-        np[i].r = 0;
-        np[i].s = Math.sin(p.phi);
-        np[i].c = Math.cos(p.phi);
-      }
-      nl = o.p.length;
-    }
-
-    else
-    {
-      for (let i = 0; i < s.num; i++)
-      {
-        np[i] = PTS[i];
-      }
-      nl = PTS.length;
-    }
-
-    // If new STATE.num is greater than either o.p.length (if provided)
-    // or the previous PTS.length.
-    for (let i = nl; i < s.num; i++)
-    {
-      np[i] = new CORE.Pt();
-    }
-
-    PTS = np;
+    VIEW.put_stop_alert();
   },
 };
 

@@ -1,11 +1,11 @@
-// file: view.js
+// file: emergence/view.js
 // by  : jooh@cuni.cz
 // for : nprg045
 
 ////////////////////////////////////////////////////////////////////////
 // draw, using html + css + canvas + javascript
 
-let VIEW =
+const VIEW =
 {
 
   // Initialise View.
@@ -23,6 +23,63 @@ let VIEW =
         .classList.add("button-show");
     }
     document.getElementById("slider").oninput = VIEW.slider_load;
+  },
+
+  // Reinitialise View.
+  reinit: function (fresh, clear)
+  {
+    const w = BRDG.get_world();
+    const s = BRDG.get_state();
+    if (fresh)
+    {
+      BRDG.set_tick(0); // which also disables slider via VIEW.toggle()
+    }
+    if (clear)
+    {
+      VIEW.erase(w.c, s.w, s.h);
+    }
+    if (w.tick < s.stop)
+    {
+      VIEW.put_stop_calm();
+    }
+  },
+
+  // Load parameters, reset view, and continue (or start) drawing.
+  start: function (raw, fresh, clear, pause)
+  {
+    VIEW.reinit(fresh, clear);
+    let params = CORE.sanitise(raw);
+    CORE.set(params);
+    CORE.init(fresh);
+    VIEW.put_params(params);
+    BRDG.pause(); // to register new fps
+    if (!pause)
+    {
+      BRDG.resume();
+    }
+    if (DEBUG) { UTIL.debug_params(BRDG.get_world(), BRDG.get_state()); }
+  },
+
+  // Pause or resume animation.
+  toggle: function (paused, tick, fps)
+  {
+    const button = document.getElementById("button-bar-toggle");
+    if (paused)
+    {
+      button.value = "PAUSE";
+      animate = setInterval(tick, (1000 / fps));
+      if (WORLD.tick < WORLD.hbsz)
+      {
+        VIEW.slider_disable();
+      }
+      if (DEBUG) { console.log("(toggle) play"); }
+    }
+    else
+    {
+      button.value = "RESUME";
+      window.clearTimeout(animate);
+      if (DEBUG) { console.log("(toggle) pause"); }
+    }
   },
 
   // Clear canvas.
@@ -44,35 +101,13 @@ let VIEW =
     }
   },
 
-  // Pause or resume animation.
-  toggle: function (paused, tick, fps)
-  {
-    let button = document.getElementById("button-bar-toggle");
-    if (paused)
-    {
-      button.value = "PAUSE";
-      animate = setInterval(tick, (1000 / fps));
-      if (WORLD.tick < WORLD.hbsz)
-      {
-        VIEW.slider_disable();
-      }
-      if (DEBUG) console.log("(toggle) play");
-    }
-    else
-    {
-      button.value = "RESUME";
-      window.clearTimeout(animate);
-      if (DEBUG) console.log("(toggle) pause");
-    }
-  },
-
   // Hand over HTML canvas object and its 2D context.
   get_canvas: function ()
   {
-    let c = document.querySelector("canvas");
+    const c = document.querySelector("canvas");
     return {
       canvas: c,
-      context: c.getContext("2d"),
+      c: c.getContext("2d"),
     };
   },
 
@@ -95,17 +130,17 @@ let VIEW =
         break;
 
       default:
-        //if (DEBUG) console.log("(handle_key) unrecognised key");
+        //if (DEBUG) { console.log("(handle_key) unrecognised key"); }
     }
   },
 
   // Handle file open event.
   handle_file: function (event)
   {
-    let r = new FileReader();
+    const r = new FileReader();
     r.onload = function()
     {
-      let area = document.querySelector(".textarea.load");
+      const area = document.querySelector(".textarea.load");
       area.value = r.result;
       area.focus();
       event.target.value = null; // clear file input value
@@ -124,8 +159,8 @@ let VIEW =
   // Handle "LOAD" button on bar.
   button_bar_load: function ()
   {
-    let msg = VIEW.message_clear("load");
-    let area = document.querySelector(".textarea.load");
+    const msg = VIEW.message_clear("load");
+    const area = document.querySelector(".textarea.load");
     area.value = "";
     VIEW.modal_reset("load", function()
     {
@@ -137,9 +172,10 @@ let VIEW =
   // Handle "SAVE" button on bar.
   button_bar_save: function ()
   {
-    let msg = VIEW.message_clear("save");
-    let area = document.querySelector(".textarea.save");
-    area.value = CORE.encode(CORE.get_snapshot());
+    const msg = VIEW.message_clear("save");
+    const area = document.querySelector(".textarea.save");
+    const dim = VIEW.get_dimensions(WORLD.gap);
+    area.value = CORE.encode(dim.w, dim.h, CORE.get_snapshot());
     VIEW.modal_reset("save", function()
     {
       area.focus();
@@ -152,130 +188,103 @@ let VIEW =
   // Handle "RESTART" button on bar.
   button_bar_restart: function ()
   {
-    let s = BRDG.get_state();
-    let p = VIEW.get_params();
-    BRDG.load(p);
-    BRDG.toggle(); // to enforce fps
-    BRDG.set_tick(0); // which also disables slider
-    VIEW.put_stop_calm();
-    VIEW.put_params(p);
-    CORE.init();
-    BRDG.resume();
-    if (DEBUG) UTIL.debug_params(BRDG.get_world(), s);
+    VIEW.start(VIEW.get_params(), true, true);
   },
 
   // Handle "APPLY" button on bar.
   button_bar_apply: function()
   {
-    let s = BRDG.get_state();
-    let p = VIEW.get_params();
-    BRDG.load(p);
-    BRDG.toggle(); // to enforce fps
-    VIEW.put_params(p);
-    CORE.init(true, true); // keep particles and radius
-    BRDG.resume();
-    if (DEBUG) UTIL.debug_params(BRDG.get_world(), s);
+    VIEW.start(VIEW.get_params());
   },
 
   // Handle "APPLY" button in Load modal.
   button_modal_apply: function ()
   {
-    let msg = VIEW.message_clear("load");
-    let text = document.querySelector(".textarea.load").value;
-    let s = BRDG.get_state();
-    let parsed;
     try
     {
-      //parsed = BRDG.load_raw(text);
-      parsed = CODE.decode(text);
+      const parsed = CORE.decode(
+        document.querySelector(".textarea.load").value);
       if (UTIL.is_empty(parsed))
       {
         throw "empty state";
       }
-      VIEW.load(parsed, true); // keep old parameters
+      VIEW.button_bar_load();
+      VIEW.start(parsed, true, true);
+      if (DEBUG) { console.log("(button_modal_apply) applied"); }
     }
     catch(err)
     {
+      const msg = VIEW.message_clear("load");
       msg.classList.add("bad");
-      msg.textContent = 'Unparsable (see "HELP" on state)';
-      if (DEBUG) console.log(err);
-      if (DEBUG) console.log("(button_modal_apply) parse & load failed");
-      return;
+      msg.textContent = "Unparsable (see \"HELP\" on state)";
+      console.log(err);
+      if (DEBUG) { console.log("(button_modal_apply) parse & load failed"); }
     }
-    VIEW.button_bar_load(); // close modal
-    CORE.init(true, true); // keep particles and radius
-    if (parsed.p)
-    {
-      BRDG.set_tick(0); // which also disables slider
-    }
-    BRDG.resume();
-    if (DEBUG) console.log("(button_modal_apply) applied");
-    if (DEBUG) UTIL.debug_params(BRDG.get_world(), s);
   },
 
   // Handle "SAVE" button in Save modal.
   button_modal_save: function ()
   {
-    let msg = VIEW.message_clear("save");
-    let text = document.querySelector(".textarea.save").value;
+    const msg = VIEW.message_clear("save");
+    const text = document.querySelector(".textarea.save").value;
     if (!text)
     {
       msg.classList.add("bad");
       msg.textContent = "Nothing to save";
-      if (DEBUG) console.log("(button_modal_save) empty");
+      if (DEBUG) { console.log("(button_modal_save) empty"); }
     }
     else
     {
-      let ref = "data:text/plain;charset=utf-8," + text;
-      let date = new Date();
-      let d = date.getFullYear().toString() +
+      const ref = "data:text/plain;charset=utf-8," + text;
+      const date = new Date();
+      const d = date.getFullYear().toString() +
         ("0" + (date.getMonth() + 1)).slice(-2) +
         ("0" + date.getDate()).slice(-2) + date.getHours().toString() +
         date.getMinutes().toString() + date.getSeconds().toString();
-      let a = document.createElement("a");
+      const a = document.createElement("a");
       a.href = ref;
       a.download = "emergence_save_" + d + ".txt";
       document.body.appendChild(a);
-      a.click();
+      a.click(); // a file save trick
       document.body.removeChild(a);
       msg.classList.add("good");
       msg.textContent = "Saved: " + a.download;
-      if (DEBUG) console.log("(button_modal_save) saved");
+      if (DEBUG) { console.log("(button_modal_save) saved"); }
     }
   },
 
   // Handle "COPY" button in Save modal.
   button_modal_copy: function ()
   {
-    let area = document.querySelector(".textarea.save");
+    const area = document.querySelector(".textarea.save");
     area.focus();
     area.select();
-    let msg = VIEW.message_clear("save");
-    let copied = document.execCommand("copy");
+    const msg = VIEW.message_clear("save");
+    const copied = document.execCommand("copy");
     if (!area.value)
     {
       msg.classList.add("bad");
       msg.textContent = "Nothing to copy";
-      if (DEBUG) console.log("(button_modal_copy) empty");
+      if (DEBUG) { console.log("(button_modal_copy) empty"); }
     }
     else if (copied)
     {
       msg.classList.add("good");
       msg.textContent = "Copied to clipboard";
-      if (DEBUG) console.log("(button_modal_copy) copied");
+      if (DEBUG) { console.log("(button_modal_copy) copied"); }
     }
     else
     {
       msg.classList.add("bad");
       msg.textContent = "Copy failed";
-      if (DEBUG) console.log("(button_modal_copy) copy failed");
+      if (DEBUG) { console.log("(button_modal_copy) copy failed"); }
     }
   },
 
   // Clear the message portion in Load/Save modals.
   message_clear: function (which)
   {
-    let msg = document.querySelector(".message." + which);
+    const msg = document.querySelector(".message." + which);
     msg.classList.remove("good", "bad");
     msg.textContent = "";
     return msg;
@@ -284,7 +293,7 @@ let VIEW =
   // Reset modal states (on open/close).
   modal_reset: function (which, action)
   {
-    let modal = document.querySelector(".modal." + which);
+    const modal = document.querySelector(".modal." + which);
     if (modal.classList.contains("modal-show"))
     {
       document.addEventListener("keyup", VIEW.handle_key);
@@ -300,69 +309,64 @@ let VIEW =
   // Handle selection of alpha/beta configuration.
   select_config: function ()
   {
-    if (DEBUG) console.log("(select_config)");
-    let config = BRDG.get_config(parseInt(
+    if (DEBUG) { console.log("(select_config)"); }
+    const config = BRDG.get_config(parseInt(
       document.getElementById("param_c").value));
-    document.getElementById("param_a").value = config.a;
-    document.getElementById("param_b").value = config.b;
-    BRDG.load(config);
+    const params = CORE.sanitise(
+      Object.assign(VIEW.get_params(), config));
+    CORE.set(params);
+    VIEW.put_params(params);
   },
 
   // Handle selection of color theme.
   select_theme: function ()
   {
-    // TODO: something is awry here. when neighborhood surpasses 10,
-    //       theme conversions become wacky.
-    if (DEBUG) console.log("(select_theme)");
-    let theme = BRDG.set_theme(parseInt(
-      document.getElementById("param_t").value));
+    // TODO: when neighborhood surpasses 10, theme conversions become
+    //       wacky, probably due to caching: BRDG.hue().
+    if (DEBUG) { console.log("(select_theme)"); }
+    const theme = BRDG.set_theme(parseInt(
+      document.getElementById("param_x").value));
     BRDG.clear_theme_cache();
     document.getElementById("bar").style.backgroundColor = theme[0];
     document.querySelector("canvas").style.backgroundColor = theme[1];
-    let spans = document.querySelectorAll("span.param");
+    const spans = document.querySelectorAll("span.param");
     for (let i = 0; i < spans.length; i++)
     {
       spans[i].style.color = theme[2];
     }
+    BRDG.paint();
   },
 
   // Handle selection of initial particle distribution scheme.
   select_distr: function ()
   {
-    if (DEBUG) console.log("(select_distr)");
-    let w = BRDG.get_world();
-    VIEW.erase(w.c, w.w, w.h);
-    BRDG.pause();
-    BRDG.set_distr(parseInt(document.getElementById("param_o").value));
-    BRDG.set_tick(0);
-    VIEW.slider_set(0);
-    VIEW.put_stop_calm();
-    VIEW.put_params(CORE.get_params());
-    VIEW.put_start();
-    CORE.init();
+    if (DEBUG) { console.log("(select_distr)"); }
+    const params = VIEW.get_params();
+    params.o = parseInt(document.getElementById("param_o").value);
+    BRDG.clear_theme_cache();
+    VIEW.start(params, true, true);
   },
 
   // Handle user sliding of history slider.
   slider_load: function ()
   {
     BRDG.pause();
-    BRDG.load(BRDG.get_history().snaps[this.value - 1]);
+    CORE.set(BRDG.get_history().snaps[this.value - 1]);
     BRDG.set_tick(this.value);
-    CORE.init(true, true); // keep particles and radius
     BRDG.paint();
   },
 
   // Disable user-controllability of history slider.
   slider_disable: function ()
   {
-    if (DEBUG) console.log("(slider_disable)");
+    if (DEBUG) { console.log("(slider_disable)"); }
     document.getElementById("slider").disabled = true;
   },
 
   // Enable user-controllability of history slider.
   slider_enable: function ()
   {
-    if (DEBUG) console.log("(slider_enable)");
+    if (DEBUG) { console.log("(slider_enable)"); }
     document.getElementById("slider").disabled = false;
   },
 
@@ -394,84 +398,37 @@ let VIEW =
   put_params: function (o)
   {
     UTIL.for_abbrev(BRDG.get_abbrev(), function (key) {
-      if (o[key] !== "")
+      if (["w", "h"].includes(key))
       {
-        document.getElementById("param_" + key).value =
-          o[key].toString();
+        return;
       }
+      document.getElementById("param_" + key).value = o[key].toString();
     });
   },
 
   // Retrieve values of parameter fields.
   get_params: function ()
   {
-    let o = {};
+    const o = {};
     let f;
 
-    // TODO: improve int or float detection. don't hardcode
     UTIL.for_abbrev(BRDG.get_abbrev(), function (key) {
-      if (["s", "o", "f", "n", "z"].includes(key))
+      if (["w", "h"].includes(key))
+      {
+        return;
+      }
+      if (["t", "o", "f", "n", "z", "r"].includes(key))
       {
         f = parseInt;
       }
-      else if (["r", "d", "a", "b", "g"].includes(key))
+      else if (["d", "a", "b", "g"].includes(key))
       {
         f = parseFloat;
       }
       o[key] = f(document.getElementById("param_" + key).value);
-    })
-
-    VIEW.fallback(o);
+    });
 
     return o;
-  },
-
-  // Helper for `button_modal_apply`.
-  // - Called by the Load modal's "APPLY" button
-  // - Calls `BRDG.load`.
-  // - TODO: needs refactoring wrt. other ways of loading, ie. how
-  //         bar's "APPLY" and "RESTART" buttons do it.
-  load: function (o, keep)
-  {
-    let has = false;
-    UTIL.for_abbrev(BRDG.get_abbrev(), function (key)
-    {
-      if (o[key])
-      {
-        has = true;
-      }
-    })
-    if (!has) throw "unmembered state";
-    VIEW.fallback(o, keep);
-    VIEW.put_params(o);
-    BRDG.load(o);
-  },
-
-  // Include default value if user input does not supply a parameter.
-  fallback: function (o, keep)
-  {
-    if (!keep)
-    {
-      let a = BRDG.get_abbrev()
-      let w = BRDG.get_world();
-      let s = BRDG.get_state();
-      let ds = BRDG.get_state_default();
-
-      UTIL.for_abbrev(a, function (key)
-      {
-        if (isNaN(o[key]))
-        {
-          if (key === "r")
-          {
-            o[key] = UTIL.auto_radius(w, s);
-          }
-          else
-          {
-            o[key] = ds[a[key]];
-          }
-        }
-      });
-    }
   },
 };
 

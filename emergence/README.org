@@ -1,0 +1,130 @@
+* emergence
+
+** About
+
+*Emergence* is a visualiser/processor of a primordial particle system and its emergent/interactive properties.
+
+Implementation is based on the article, /How a life-like system emerges from a simple particle motion law/, by  Schmickl, Stefanec, and Crailsheim: https://www.nature.com/articles/srep37969.
+
+There are two ways of using the program: graphically via the browser interface and headlessly via the commandline. The former allows the user to control various parameters and visually appreciate the effects, while the latter opens up possibilities for scripting, automation, and batch analyses.
+
+** Try
+
+*** Locally
+
+- Browser interface ::
+
+Point your (javascript-and-html5-capable) browser to =emergence/index.html=
+
+- For example, on a chromebook, download & unzip this repository, open a Chrome tab, and visit =file:///home/chronos/user/Downloads/emergence/index.html=.
+
+- Commandline interface ::
+
+1. Have nodejs installed, https://nodejs.org/.
+1. Download this repository.
+1. On the commandline, go to the =emergence/= directory in the downloaded repository.
+1. Run =node core.js ...=. (try =-h= for quick help)
+
+*** Remotely
+
+Visit https://b.agaric.net/dev/emergence for an instance of the browser interface.
+
+*** Interface help
+
+For quick help on the browser interface, click the HELP button at the top-left corner.
+
+For quick help on the commandline interface, run =node core.js -h=.
+
+For more detailed help, see "Usage" section below.
+
+** Screenshot
+
+[[screenshot.png]]
+
+** Usage
+
+** Development
+
+*** Files
+
+- index.html ::
+
+The browser interface lives in [[index.html][index.html]]. The HTML file renders all the static components, and loads the javascript files.
+
+- {core,view,bridge,headless}.js ::
+
+The bulk of the functionality is implemented in four javascript files.
+
+- [[core.js][core.js]] contains all the global variables (discounting the file namespace variables BRDG, VIEW, and UTIL), particle and "world" creation, and the functions that compute and manipulate the "world".
+- [[view.js][view.js]] controls the browser interface (ie. the HTML page) by manipulating and reading from the [[https://en.wikipedia.org/wiki/Document_Object_Model][DOM]].
+- [[bridge.js][bridge.js]] connects the core and the view by supplying each side with necessary information. The core and view know almost nothing about each other, while the bridge knows a little about both.
+- [[headless.js][headless.js]] provides a minimal commandline view and performs the simple task of handling commandline options, running the core computation in a loop, and spitting out the resulting state.
+
+- util.js ::
+
+The [[util.js][util.js]] file includes common or miscellaneous code snippets that do not belong to precisely one of the other files.
+
+- headlessness ::
+
+The entry point for the browser interface is =core.tick()=, and the entry point for the commandline interface is =headless.exec()=. The former function gets strapped onto the HTML timer mechanism (ie. via =setInterval=), but =headless.exec()= gets executed straight in a while loop.
+
+The notion of "when to stop execution" is dealt with in and around the respective functions. Stopping is optional with visual execution but necessary in the headless.
+
+The ability to reuse one =core.js= file between the browser and the commandline is made possible with the nodejs javascript runtime. At the beginning of =core.js=, the file checks whether it was called by a browser or by the nodejs interpreter, and in the case of the latter, a call to =headless.exec()= is made.
+
+- data & state ::
+
+=core.js= defines a central data store (in the form of global variables).
+
+- =WORLD=, =STATE=, and =PTS= together make up this central data store. They cover aspects like canvas dimensions, particle size, colors, direction parameters, and almost everything else.
+- Of the 3 variables, =PTS= is a just a simple list of particles, where each particle holds information about its own location, heading, and neighbor count.
+- =WORLD= and =STATE= are objects that contain information that particles need in order to exist, move, and get drawn. The two variables have basically the same kind and purpose, except for the fact that =STATE= gets saved and loaded, whereas =WORLD= does not. To put it another way, =STATE= represents the core information that the program needs in order to recreate that entire world again, for any of the user interfaces.
+
+- state string format ::
+
+Internally, the state data is passed around as javascript objects, but to the user, state is represented by a multiline string, with the following format:
+
+#+BEGIN_SRC
+width height stop distr fps num psz rad den alpha beta gamma
+1  pt[1].x  pt[1].y  pt[1].phi
+2 ...
+...
+#+END_SRC
+
+The meaning of the items are commented in =core.js=. Every item represents a number that is separated by horizontal and vertical whitespaces as seen in the above snippet. The =dens=, =alpha=, =beta=, and =gamma= parameters are floating point numbers and the rest are integers. The numbers are all expected to be >= 0 (=width= and =height= > 0), except for =alpha= and =beta=.
+
+This string can be passed in in one of three ways: (1) as an argument to the commandline interface; (2) saved in a text file and also passed in as an argument to the commandline; or (3) pasted in through the browser interface's LOAD button.
+
+Furthermore, the state string may be incomplete, but parameters will be extracted sequentially, left-to-right. To specify parameters non-consecutively, the "_" symbol (or any other non-numeric string) can be used in the place of parameters that the user wishes to leave unspecified and default.
+
+- For example, an input string of "200 200 100 1" assigns /width/ and /height/ to 200 pixels, /stop/ to 100 ticks, and /distr/ to 1 (= gaussian distribution), but the other particles will be left at their default values.
+- Another example is the input string of "200 200 100 0 _ 50", which specifies a 200-by-200 world, running for 100 ticks, with uniform initial distribution of 50 particles. All other parameters (specifically the underscored /fps/) are set to default.
+
+- saving & loading ::
+
+Browser interface:
+
+- Saving is done by clicking the SAVE button in the top-right corner. This snapshot of the world (ie. of the moment when SAVE was clicked) can be copied onto the clipboard or saved to a file. The name of the save file is predetermined.
+- Loading is done by clicking the LOAD button in the top-right corner. The user can feed in a file, or type in the state string directly. Clicking APPLY loads the new world and immediately starts the animation.
+
+Commandline interface:
+
+- Maybe not "saving" per se, but the output of the program represents a final state of the world. Analogously, the argument string/file to the program represents an initial state of the world. These are the only ways to save and load via the commandline.
+
+- gotchas & interoperation ::
+
+Hopefully, both headless and headed operations will be intuitive to the user, and switching between the two should be seamless as the same state string format is used everywhere, as far as the user is concerned. However, there are a few quirks to keep in mind.
+
+Number of ticks until stop:
+
+- On the browser, the default behavior is to animate indefinitely until explicit user intervention. On the commandline, however, because signal handling has not been implemented yet, the program maintains a default stop value of 0 ticks, which means that, besides initial world creation, no computation is done. The user should therefore specify the third parameter on the first line of the state string for any computation to be done.
+
+World dimensions:
+
+- On the browser, the world naturally adopts the size of the browser. On the commandline, the world defaults to 1000 by 1000 (virtual units) if the user does not provide the dimensions.
+- If specific dimensions are fed directly into the browser, by pasting the output of a prior commandline execution or otherwise, the input is scaled onto the actual browser canvas. (That is, of course, if the two sizes do not match up exactly.) So, for instance, if the browser window is huge but the size of the world has been set to only 100 by 100, the particles will appear relatively huge as well.
+
+=num= vs =pts.length=:
+
+- The number of particles in the world is encoded in two distinct ways: By the =STATE.num= variable and the size of the input particle list. In all cases, =STATE.num= holds precedence. In the case that these two values differ, the listed particles are preserved as much as possible, but truncated if their number is greater than =STATE.num= or padded with new random particles if less than =STATE.num=.
+
