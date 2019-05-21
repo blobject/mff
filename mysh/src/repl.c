@@ -172,6 +172,7 @@ rinse(struct llltok* semis)
             {
                 word = TAILQ_FIRST(&words->head);
                 TAILQ_REMOVE(&word->head, word, list);
+                free(word->word); // the actual string
                 free(word);
             }
             free(words);
@@ -235,10 +236,14 @@ loop_body(struct eh* eh, const char* line)
     TAILQ_INIT(&semis->head);
     if ((ok = parse(line_cp, semis)) > 0)
     {
+        rinse(semis);
+        free(semis);
         return 1;
     }
     if (ok < 0)
     {
+        rinse(semis);
+        free(semis);
         return 0;
     }
     free(line_cp);
@@ -246,11 +251,14 @@ loop_body(struct eh* eh, const char* line)
     /* eval */
     if ((ok = eval(semis)) > 0)
     {
+        rinse(semis);
+        free(semis);
         return 1;
     }
 
     /* rinse */
     rinse(semis);
+    free(semis);
 
     return 0;
 }

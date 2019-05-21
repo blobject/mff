@@ -203,6 +203,7 @@ fill_cmds(char* str, struct lltok* fill)
             warnx("input truncated");
         }
         strcpy(c_cp, c_new);
+        free(c_new);
 
         cmd = malloc(sizeof(struct ltok));
         if (cmd == NULL)
@@ -579,7 +580,7 @@ redir(char type, const char* line, char** s)
     int where = -1;
     char* word_end = NULL;
     char* word;
-    char* line_cp = malloc(strlen(line));
+    char* line_cp;
 
     line_cp = malloc(sizeof(char) * LIM);
     if (line_cp == NULL)
@@ -639,6 +640,8 @@ redir(char type, const char* line, char** s)
 
         found = 0;
     }
+
+    free(line_cp);
 
     return where;
 }
