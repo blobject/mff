@@ -17,22 +17,33 @@ build dependencies: make, clang, libedit
 
 - code structure ::
   - outline
-    1. mysh starts: [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/main.c#L13][main()]]
-    2. "mode" of the shell is determined: [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/main.c#L13][main()]], [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L613][opt()]], [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/repl.c#L253][loop()]]
-    3. repl starts: [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/repl.c#L253][loop()]], [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/repl.c#L192][loop_body()]]
-    4. input is read, variation depending on mode: [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/repl.c#L253][loop()]], [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/repl.c#L120][get()]]
-    5. read input is parsed into tokens: [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/parse.c#L263][parse()]]
-    6. tokens are evaluated: [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/parse.c#L428][eval()]]
-    7. next iteration of repl is readied: [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/repl.c#L150][rinse()]]
-  - *makefile* - for =make ...=
-  - src/ *main.c* - main function as entry point into *mysh*
-  - src/ *test.c* - unit test implementations, and main function to run them
-  - src/ *mysh.h* - struct implementations and function declarations
-  - src/ *parse.c* - parsing and evaluating
-  - src/ *repl.c* - looping, initialising, and finalising
-  - src/ *util.c* - utility and helpers
-  - *sample.mysh* - a sample non-interactive script - try with =./mysh sample.mysh=
-  - *obj/* - compiled =*.o= files, not version-controlled
+    1. mysh starts: [[https://github.com/agarick/mff/blob/master/mysh/src/main.c#L14][main()]]
+    2. "mode" of the shell is determined: [[https://github.com/agarick/mff/blob/master/mysh/src/main.c#L14][main()]], [[https://github.com/agarick/mff/blob/master/mysh/src/repl.c#L91][opt()]], [[https://github.com/agarick/mff/blob/master/mysh/src/repl.c#L288][loop()]]
+    3. repl starts: [[https://github.com/agarick/mff/blob/master/mysh/src/repl.c#L266][loop()]], [[https://github.com/agarick/mff/blob/master/mysh/src/repl.c#L193][loop_body()]]
+    4. input is read, variation depending on mode: [[https://github.com/agarick/mff/blob/master/mysh/src/repl.c#L266][loop()]], [[https://github.com/agarick/mff/blob/master/mysh/src/repl.c#L120][get()]]
+    5. read input is parsed into tokens: [[https://github.com/agarick/mff/blob/master/mysh/src/parse.c#L294][parse()]]
+    6. tokens are evaluated: [[https://github.com/agarick/mff/blob/master/mysh/src/parse.c#L459][eval()]]
+    7. commands are spawned: [[https://github.com/agarick/mff/blob/master/mysh/src/parse.c#L330][spawn()]]
+    8. next iteration of repl is readied: [[https://github.com/agarick/mff/blob/master/mysh/src/repl.c#L150][rinse()]]
+  - data
+    - [[https://github.com/agarick/mff/blob/master/mysh/src/mysh.h#L40][line -> semi -> cmd -> word -> token]]
+      - where "line" and "token" are strings and the structs between them are TAILQs.
+      - the "->" refers not to actual membership but to a "conceptual" membership -- ie. from a "line" we get "semis" and each "semi" contains "cmds", etc.
+    - the populating of semis, cmds, and words are done through [[https://github.com/agarick/mff/blob/master/mysh/src/parse.c#L310][nested string splitting]].
+  - redirecting
+    - [[https://github.com/agarick/mff/blob/master/mysh/src/util.c#L64][chop off]] any trailing substrings that [[https://github.com/agarick/mff/blob/master/mysh/src/parse.c#L567][look redirectible]], and [[https://github.com/agarick/mff/blob/master/mysh/src/parse.c#L162][behave accordingly]].
+  - piping
+    - each spawn is [[https://github.com/agarick/mff/blob/master/mysh/src/parse.c#L335][given parameters]] describing [[https://github.com/agarick/mff/blob/master/mysh/src/parse.c#L534][its place in]] the pipeline.
+  - files
+    - *makefile* - for =make ...=
+    - src/ *main.c* - main function as entry point into *mysh*
+    - src/ *test.c* - unit test implementations, and main function to run them
+    - src/ *mysh.h* - struct implementations and function declarations
+    - src/ *parse.c* - parsing and evaluating
+    - src/ *repl.c* - looping, initialising, and finalising
+    - src/ *util.c* - utility and helpers
+    - *sample.mysh* - a sample non-interactive script - try with =./mysh sample.mysh=
+    - *obj/* - compiled =*.o= files, not version-controlled
 
 - miscellany ::
   - read: libedit used
@@ -81,5 +92,6 @@ build dependencies: make, clang, libedit
   - :-D [[https://github.com/agarick/mff/blob/nswi015_mysh_phase2/mysh/src/parse.c#L178][redirection "after" piping]]
 
 - phase 2 more ::
-  - :-| github [[https://github.com/agarick/mff/issues/2][#2]]
-  - :-( testing (too many things to test, gave up)
+  - :-D github [[https://github.com/agarick/mff/issues/2][#2]]
+  - :-S unit testing (too many things to test a posteriori, gave up)
+  - :-D various issues (see github [[https://github.com/agarick/mff/issues/13][#13]], [[https://github.com/agarick/mff/issues/14][#14]], [[https://github.com/agarick/mff/issues/15][#15]], [[https://github.com/agarick/mff/issues/16][#16]])
