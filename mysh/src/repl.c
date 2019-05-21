@@ -285,7 +285,6 @@ loop(struct eh* eh, enum loop_type t, const char* line_or_file)
         {
             if ((ok = get(&line, eh->editline, &getcount)) < 0)
             { /* C-d */
-                printf("\n");
                 return 0;
             }
             if (ok > 0)

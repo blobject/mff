@@ -189,7 +189,7 @@ fill_cmds(char* str, struct lltok* fill)
             return 1;
         }
 
-	/* remove any redirection */
+        /* remove any redirection */
         c_new = unred(c);
 
         c_cp = malloc(sizeof(char) * LIM);
@@ -536,8 +536,7 @@ eval(const struct llltok* semis)
                 ++spawn_count;
                 if (spawn_count < cmd_count)
                 {
-                    if ((in = spawn(c, in, first, 0, r, w, a))
-                        == -1)
+                    if ((in = spawn(c, in, first, 0, r, w, a)) == -1)
                     {
                         return -1;
                     }
@@ -545,8 +544,7 @@ eval(const struct llltok* semis)
                 }
                 else /* last in pipeline */
                 {
-                    if ((in = spawn(c, in, 0, 1, r, w, a))
-                        == -1)
+                    if ((in = spawn(c, in, 0, 1, r, w, a)) == -1)
                     {
                         return -1;
                     }

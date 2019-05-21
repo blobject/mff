@@ -28,7 +28,6 @@ main(int argc, char** argv)
     /* stdin */
     if (argc == 1)
     {
-        printf("%s\n\n", motd());
         loop(eh, LOOP_STDIN, NULL); /* unused return value */
     }
 
@@ -52,7 +51,7 @@ main(int argc, char** argv)
         }
         if(access(argv[1], F_OK) == -1)
         {
-            warnx("file nonexistent");
+            warnx("file does not exist");
             LASTOK = ERR_FNE;
         }
         loop(eh, LOOP_FILE, argv[1]); /* unused return value */

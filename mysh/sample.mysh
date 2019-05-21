@@ -1,5 +1,0 @@
-echo foo
-cd /; ls
-cd; ls
-not_a_cmd_1
-ps
