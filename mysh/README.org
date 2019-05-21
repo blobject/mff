@@ -5,10 +5,13 @@ basic linux shell (exec, cd, fork, pipe, redirect)
 per https://devnull-cz.github.io/unix-linux-prog-in-c/class-assignments/labs-assignment-2018.txt
 
 - build ::
+
+build dependencies: make, clang, libedit
+
   - first =cd mff/mysh=
   - build: =make=
   - build test: =make test=
-  - *run*: =./mysh= or =make run=
+  - run: =./mysh= or =make run=
   - test: =./test=
   - clean: =make clean=
 
@@ -36,7 +39,6 @@ per https://devnull-cz.github.io/unix-linux-prog-in-c/class-assignments/labs-ass
   - style: allman indent, 72 char width, spaces not tabs
   - style: no particular linter used
   - testing: MinUnit "framework"
-  - testing: coverage incomplete, partially failing on lab computers
 
 - phase 1 requirements ::
   - due 13 jan 2019 (*[[https://github.com/agarick/mff/tree/nswi015_mysh_phase1/mysh][phase1 branch]]* frozen @ 13 jan 2019 [[https://github.com/agarick/mff/commit/5baf9218b5a2a9709ebd8f2e7ba0108518b465e9][5baf9218b5]])

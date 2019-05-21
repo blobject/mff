@@ -645,6 +645,7 @@ cd(char** args, int size)
     if (size > 2)
     {
         warnx("cd: too many arguments");
+        LASTOK = ERR_FAIL;
         return 1;
     }
 
