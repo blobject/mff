@@ -203,9 +203,9 @@ loop_body(struct eh* eh, const char* line)
     history(eh->history, eh->histevent, H_ENTER, line);
 
     /* check */
-    if ((ok = check(line)) > 0)
+    if ((ok = check(line)) != 0)
     {
-        return 1;
+        return ok;
     }
 
     /* parse */
@@ -298,7 +298,10 @@ loop(struct eh* eh, enum loop_type t, const char* line_or_file)
             }
             if ((ok = loop_body(eh, line)) != 0)
             {
-                return ok;
+                if (ok > 0)
+                {
+                    return ok;
+                }
             }
         }
         break;

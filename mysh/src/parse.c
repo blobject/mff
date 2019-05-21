@@ -28,7 +28,21 @@ check(const char* line)
 {
     regex_t re;
 
-    if ((regcomp(&re, ";[ \t]*;", 0)) != 0)
+    if ((regcomp(&re, "[;|<][ \t]*[;|<]", 0)) != 0)
+    {
+        warnx("regex compilation error");
+        return 1;
+    }
+    if ((regexec(&re, line, 0, NULL, 0)) == 0)
+    {
+        regfree(&re);
+        warnx("%d: syntax error", LINECOUNT);
+        LASTOK = ERR_SYN;
+        return -1;
+    }
+    regfree(&re);
+
+    if ((regcomp(&re, ">>>", 0)) != 0)
     {
         warnx("regex compilation error");
         return 1;
