@@ -12,14 +12,14 @@ for : nprg045
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <style>
-      #bar-middle #stop input,
-      #bar-right span.param input,
+      div#bar-middle span#stop input,
+      div#bar-right span.param input,
       div.modal.help div.modal-body,
       span.message.load,
       span.message.save
       { font-size: 13px; }
-      #bar-middle #stop,
-      #bar-right span.param,
+      div#bar-middle span#stop,
+      div#bar-right span.param,
       div.modal-close
       { font-size: 14px; }
       body
@@ -27,12 +27,12 @@ for : nprg045
       canvas
       { flex: 1;
         background-color: #bee9e4; }
-      #emergence
+      div#emergence
       { display: flex;
         flex-direction: column;
         align-items: stretch;
         align-content: stretch; }
-      #bar
+      div#bar
       { flex-basis: 60px;
         display: flex;
         flex-direction: row;
@@ -42,48 +42,57 @@ for : nprg045
         background-color: #76c4ae;
         margin: 0;
         padding: 0 .5em; }
-      #bar div.modal-body input[type="button"]
+      div#bar div.modal-body input[type="button"]
       { margin-top: 1em; }
-      #bar input[type="button"],
-      #bar select
+      div#bar input[type="button"],
+      div#bar select
       { font-size: 12px;
         font-weight: 700; }
-      #bar input[type="number"],
-      #bar span.param
+      div#bar input[type="number"],
+      div#bar span.param
       { font-family: monospace; }
-      #bar input[type="button"]
+      div#bar input[type="button"]
       { margin: 0 .4em; }
-      #bar select
+      div#bar select
       { margin: 0; }
-      #bar-left,
-      #bar-middle,
-      #bar-right
+      div#bar-left,
+      div#bar-middle,
+      div#bar-right
       { margin: 0;
         line-height: 24px;
         white-space: nowrap; }
-      #bar-left
+      div#bar-left
       { min-width: 9em;
         margin-right: .2em; }
-      #bar-left div.modal
+      div#bar-left div.modal
       { white-space: normal; }
-      #bar-middle
+      div#bar-middle
       { flex: 1;
         text-align: right;
         margin: 0 15px 0 10px;
         white-space: nowrap; }
-      #bar-middle #stop
+      div#bar-middle input#slider
+      { width: 24em;
+        vertical-align: middle; }
+      div#bar-middle span#stop
       { margin: 0 -.5em 0 -.2em;
         padding: 5px; }
-      #bar-middle #slider
-      { width: 250px; vertical-align: middle; }
-      #bar-middle span.param
-      { margin-left: .5em; }
-      #bar-right span.param
+      div#bar-middle input#button-bar-random
+      { margin: 0 0 0 1em; }
+      div#bar-middle span.param
+      { margin-left: .3em; }
+      div#bar-right span.param
       { margin: 0 .2em; }
-      #bar-middle #stop input,
-      #bar-right span.param input
+      div#bar-middle span#stop input,
+      div#bar-right span.param input
       { width: 4em; }
-      #button-modal-open
+      div#bar-right span.param input#param_f,
+      div#bar-right span.param input#param_z
+      { width: 3.5em; }
+      div#bar-right span.param input#param_a,
+      div#bar-right span.param input#param_b
+      { width: 4.5em; }
+      input#button-modal-open-real
       { display: none;
         opacity: 0;
         visibility: hidden; }
@@ -155,6 +164,10 @@ for : nprg045
       { display: inline-block !important;
         opacity: 1 !important;
         visibility: visible !important; }
+      span.info
+      { font-size: 13px;
+        font-style: italic;
+        color: #666; }
       span.alert
       { background: red; }
     </style>
@@ -174,13 +187,15 @@ for : nprg045
               <div class="modal-body">
                 <strong><em>Emergence</em> usage:</strong>
                 <ul>
-                  <li><em><strong>PAUSE</strong>/<strong>RESUME</strong>:</em> pause/resume animation</li>
+                  <li><em><strong>PAUSE</strong>/<strong>RESUME</strong>:</em> pause/resume animation
+                    <ul><li>also clicking the canvas</li></ul></li>
                   <li><em><strong>LOAD</strong>:</em> load in user input state (partial input loads in the partial state)</li>
                   <li><em><strong>SAVE</strong>:</em> save current state</li>
                   <li><em>The <strong>slider</strong>:</em> traverse through (lossy) animation history</li>
                   <li><em><strong>x</strong>:</em> choose color theme</li>
                   <li><em><strong>c</strong>:</em> choose world configuration</li>
                   <li><em><strong>o</strong>:</em> initial particle distribution scheme</li>
+                  <li><em><strong>RANDOM</strong>:</em> randomly set &alpha; &amp; &beta; parameters and restart</li>
                   <li><em><strong>APPLY</strong>, <strong>RESTART</strong>:</em> set (, or set and restart with) the following parameters:
                     <ul>
                       <li><em><strong>t</strong>:</em> (int) ticks until animation stops</li>
@@ -196,7 +211,7 @@ for : nprg045
                   </li>
                   <li><em>The <strong>state</strong>:</em> is a snapshot of world parameters and particle coordinates:
                     <ul>
-                      <li>"<strong>w</strong> <strong>h</strong> <strong>t</strong> <strong>o</strong> <strong>f</strong> <strong>n</strong> <strong>z</strong> <strong>r</strong> <strong>d</strong> <strong>&alpha;</strong> <strong>&beta;</strong> <strong>&gamma;</strong> / pt1: # <strong>x</strong> <strong>y</strong> <strong>&phi;</strong> / pt2 / etc."</li>
+                      <li>"<strong>w</strong> <strong>h</strong> <strong>t</strong> <strong>o</strong> <strong>f</strong> <strong>n</strong> <strong>z</strong> <strong>r</strong> <strong>d</strong> <strong>&alpha;</strong> <strong>&beta;</strong> <strong>&gamma;</strong> / pt1: 1 <strong>x</strong> <strong>y</strong> <strong>&phi;</strong> / pt2: 2 ... / ..."</li>
                       <li>where:
                         <ul>
                           <li>each (bold) label is a number</li>
@@ -228,7 +243,9 @@ for : nprg045
                 <span class="modal-title">LOAD</span>
               </div>
               <div class="modal-body">
-                <textarea class="textarea load" placeholder="Please input the state (see HELP for the format)"></textarea>
+                <textarea class="textarea load" placeholder="Please input the state (see below and HELP for the format)"></textarea>
+                <br>
+                <span class="info">format: <strong>w</strong> <strong>h</strong> <strong>t</strong> <strong>o</strong> <strong>f</strong> <strong>n</strong> <strong>z</strong> <strong>r</strong> <strong>d</strong> <strong>&alpha;</strong> <strong>&beta;</strong> <strong>&gamma;</strong> / pt1: 1 <strong>x</strong> <strong>y</strong> <strong>&phi;</strong> / pt2: 2 ... / ...</span>
                 <br>
                 <input type="file" id="button-modal-open-real" name="file" style="display: none;">
                 <input type="button" id="button-modal-open" value="READ IN FILE" onClick="document.getElementById('button-modal-open-real').click();">
@@ -288,32 +305,33 @@ for : nprg045
             <option value="15">stable rings</option>
           </select>
           <span class="param">o:</span>
-          <select id="param_o" class="param" onChange="VIEW.select_distr()">
+          <select id="param_o" class="param" onChange="VIEW.select_distribution()">
             <option value="0">uniform</option>
             <option value="1">gaussian</option>
             <option value="2">middle</option>
           </select>
+          <input type="button" id="button-bar-random" value="RANDOM" onClick="VIEW.button_bar_random()">
         </div>
         <div id="bar-right">
           <input type="button" id="button-bar-apply" value="APPLY" onClick="VIEW.button_bar_apply()">
+	        <span class="param">&alpha;:<input type="number" id="param_a" class="param"></span>
+	        <span class="param">&beta;:<input type="number" id="param_b" class="param"></span>
+	        <span class="param">&gamma;:<input type="number" id="param_g" class="param"></span>
+	        <span class="param">d:<input type="number" id="param_d" class="param"></span>
+	        <br>
+	        <input type="button" id="button-bar-restart" value="RESTART" onClick="VIEW.button_bar_restart()">
 	        <span class="param">f:<input type="number" id="param_f" class="param"></span>
 	        <span class="param">n:<input type="number" id="param_n" class="param"></span>
 	        <span class="param">z:<input type="number" id="param_z" class="param"></span>
 	        <span class="param">r:<input type="number" id="param_r" class="param"></span>
-	        <br>
-	        <input type="button" id="button-bar-restart" value="RESTART" onClick="VIEW.button_bar_restart()">
-	        <span class="param">d:<input type="number" id="param_d" class="param"></span>
-	        <span class="param">&alpha;:<input type="number" id="param_a" class="param"></span>
-	        <span class="param">&beta;:<input type="number" id="param_b" class="param"></span>
-	        <span class="param">&gamma;:<input type="number" id="param_g" class="param"></span>
         </div>
 	    </div>
       <canvas onClick="BRDG.toggle();"></canvas>
     </div>
     <!--
     Introduces global namespaces:
-    - DEBUG, TAU, COLORS, CONFIGS, ABBREV, WORLD, STATE, STATED, PTS,
-      HIST, U, UTIL, VIEW, BRDG, and CORE.
+    - DEBUG, TAU, NDISTR, COLORS, CONFIGS, ABBREV, WORLD, STATE,
+      STATED, PTS, HIST, U, UTIL, VIEW, BRDG, and CORE.
     - Order of load matters.
     -->
     <script src="util.js"></script>

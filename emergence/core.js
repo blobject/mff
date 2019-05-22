@@ -3,7 +3,7 @@
 // for : nprg045
 
 ////////////////////////////////////////////////////////////////////////
-// this file is used headlessly
+// this file can be used headlessly
 
 function headless()
 {
@@ -17,17 +17,14 @@ const U = (headless() ? require("./util") : UTIL);
 
 const DEBUG = false;
 
-// Constants.
-const TAU = Math.PI * 2;
-
 // Color themes.
 const COLORS =
-[ // bar       canvas     labels    less --> more crowded
-  ["#76c4ae", "#bee9e4", "#000000", 240,290,  0,40], // green
-  ["#363631", "#16161d", "#ffffff", 140,320,240,40], // black
-  ["#ebebeb", "#ffffff", "#000000", 200,320,240,40], // white
-  ["#fed6f1", "#fff2e9", "#000000", 290,240, 20, 0], // pink
-  ["#cae6fc", "#daedfd", "#000000", 200,240,  0,40], // blue
+[ //  bar       canvas     labels
+  [0, "#76c4ae", "#bee9e4", "#000000"], // green
+  [1, "#363631", "#16161d", "#ffffff"], // black
+  [2, "#ebebeb", "#ffffff", "#000000"], // white
+  [3, "#fed6f1", "#fff2e9", "#000000"], // pink
+  [4, "#cae6fc", "#daedfd", "#000000"], // blue
 ];
 
 // Interesting instances of alpha and beta (see original article).
@@ -54,18 +51,18 @@ const CONFIGS =
 // State parameter listing, for translation to/from abbreviation.
 const ABBREV =
 {
-  w: "w",
-  h: "h",
+  w: "width",
+  h: "height",
   t: "stop",
-  o: "distr",
+  o: "distribution",
   f: "fps",
   n: "num",
-  z: "psz",
-  r: "rad",
-  d: "den",
-  a: "a",
-  b: "b",
-  g: "g",
+  z: "psize",
+  r: "radius",
+  d: "density",
+  a: "alpha",
+  b: "beta",
+  g: "gamma",
 };
 
 // World state, part 1.
@@ -75,23 +72,23 @@ const ABBREV =
 const WORLD =
 {
   // dimension
-  canvas: null, // html canvas object
-  c:      null, // canvas context object
-  whalf:  null, // half width
-  hhalf:  null, // half height
-  gap:    61,   // space for bar
+  canvas:      null, // html canvas object
+  context:     null, // canvas context object
+  width_half:  null, // half width
+  height_half: null, // half height
+  gap:         61,   // space for bar
 
   // coloring
   hues:  [],        // particle hue cache
   theme: COLORS[0], // theme: gr, cy, bl, vi, re, or
 
   // animation
-  paused: true, // whether currently paused
-  tick:   0,    // tick count
-  hbsz:   100,  // history buffer merge interval
+  paused:       true, // whether currently paused
+  tick:         0,    // tick count
+  history_size: 100,  // history buffer merge interval
 
   // miscellaneous
-  radsq: null, // radius squared
+  radius_squared: null,
   speed: null, // particle speed
   crowd: null, // crowdedness / color interval
 };
@@ -99,18 +96,18 @@ const WORLD =
 // Default values for `STATE`.
 const STATED =
 {
-  w:     null,  // width
-  h:     null,  // height
-  stop:  0,     // ticks until stop
-  distr: 0,     // initial particle distribution scheme
-  fps:   30,    // frames per second
-  num:   4000,  // number of particles
-  psz:   3,     // particle size
-  rad:   null,  // neighborhood radius
-  den:   8.0,   // density
-  a:     180,   // alpha
-  b:     17,    // beta
-  g:     0.134, // gamma
+  width:        null,  // width
+  height:       null,  // height
+  stop:         0,     // ticks until stop
+  distribution: 0,     // initial particle distribution scheme
+  fps:          30,    // frames per second
+  num:          4000,  // number of particles
+  psize:        3,     // particle size
+  radius:       null,  // neighborhood radius
+  density:      8.0,   // neighborhood density
+  alpha:        180,
+  beta:         17,
+  gamma:        0.134, // radius-dependent speed scaling
 };
 
 // World state, part 2.
@@ -124,8 +121,8 @@ let PTS;
 // History.
 const HIST =
 {
-  snaps: new Array(WORLD.hbsz), // snapshots, sync. with #slider
-  buf: new Array(WORLD.hbsz),   // buffer
+  snaps: new Array(WORLD.history_size), // snapshots, sync. with #slider
+  buf: new Array(WORLD.history_size),   // buffer
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -141,34 +138,34 @@ const CORE =
     const s = STATE;
     let f;
 
-    // Initial position control
-    if (x)
+    // Initial position
+    if (x >= 0)
     {
       this.x = x;
     }
     else
     {
-      if      (s.distr === 0) { f = u.uniform; }
-      else if (s.distr === 1) { f = u.gaussian; }
-      else if (s.distr === 2) { f = u.middle; }
-      this.x = f(s.w);
+      if      (s.distribution === 0) { f = u.uniform; }
+      else if (s.distribution === 1) { f = u.gaussian; }
+      else if (s.distribution === 2) { f = u.middle; }
+      this.x = f(s.width);
     }
 
-    if (y)
+    if (y >= 0)
     {
       this.y = y;
     }
     else
     {
-      if      (s.distr === 0) { f = u.uniform; }
-      else if (s.distr === 1) { f = u.gaussian; }
-      else if (s.distr === 2) { f = u.middle; }
-      this.y = f(s.h);
+      if      (s.distribution === 0) { f = u.uniform; }
+      else if (s.distribution === 1) { f = u.gaussian; }
+      else if (s.distribution === 2) { f = u.middle; }
+      this.y = f(s.height);
     }
 
     // Main formula (see original article):
     // delta(phi) per delta(t) = a + b * N(t,r) * sgn(R(t,r) - L(t,r))
-    this.phi = (phi ? phi : Math.random() * TAU);
+    this.phi = (!!phi ? phi : Math.random() * u.TAU);
     this.n = 0;
     this.l = 0;
     this.r = 0;
@@ -182,13 +179,11 @@ const CORE =
     const w = WORLD;
     const s = STATE;
 
-    s.w = (!s.w ? U.auto_width() : s.w);
-    s.h = (!s.h ? U.auto_height(w.gap) : s.h);
+    s.width = (!s.width ? U.auto_width() : s.width);
+    s.height = (!s.height ? U.auto_height(w.gap) : s.height);
 
     if (fresh)
     {
-      s.rad = U.auto_radius(s.w, s.h, s.den, s.num);
-
       PTS = new Array(s.num);
       for (let i = 0; i < s.num; i++)
       {
@@ -196,8 +191,12 @@ const CORE =
       }
     }
 
-    w.radsq = s.rad * s.rad;
-    w.speed = s.g * s.rad;
+    if (!s.radius)
+    {
+      s.radius = U.auto_radius(s.width, s.height, s.density, s.num);
+      w.radius_squared = s.radius * s.radius;
+      w.speed = s.gamma * s.radius;
+    }
   },
 
   // What to do on every frame of animation.
@@ -206,7 +205,7 @@ const CORE =
   {
     const c = CORE;
     const b = BRDG;
-    let w = WORLD;
+    const w = WORLD;
     const s = STATE;
 
     // Disallow further animation if `stop` is specified
@@ -228,11 +227,10 @@ const CORE =
   // - The core of this entire program.
   next: function (core, world)
   {
-    // "Localise" globals variables for performance.
     const u = U;
     const s = STATE;
     const p = PTS;
-    const tau = TAU;
+    const tau = u.TAU;
     const sin = Math.sin;
     const cos = Math.cos;
     const floor = Math.floor;
@@ -266,7 +264,9 @@ const CORE =
   near: function (world, state, pts, floor, mod)
   {
     CORE.from(world, state, pts,
-      CORE.grid_init(state.w, state.h, state.rad, pts, floor), mod);
+      CORE.grid_init(state.width, state.height,
+                     state.radius, pts, floor),
+      mod);
   },
 
   // Update crowdedness based on new neighborhood average.
@@ -288,25 +288,25 @@ const CORE =
     for (let i = 0; i < state.num; i++)
     {
       p = pts[i];
-      delta = state.a + (state.b * p.n * sgn(p.r - p.l));
+      delta = state.alpha + (state.beta * p.n * sgn(p.r - p.l));
       p.phi = mod(p.phi + delta, tau);
       p.sin = sin(p.phi);
       p.cos = cos(p.phi);
-      p.x = mod(p.x + world.speed * p.cos, state.w);
-      p.y = mod(p.y + world.speed * p.sin, state.h);
+      p.x = mod(p.x + world.speed * p.cos, state.width);
+      p.y = mod(p.y + world.speed * p.sin, state.height);
     }
   },
 
   // Helper for `near`.
-  // - Initialise a grid for performance optimisation.
-  grid_init: function (w, h, rad, pts, floor)
+  // - Initialise a grid whose units have size `radius`.
+  grid_init: function (width, height, radius, pts, floor)
   {
     // Number of rows & columns
-    const cols = (rad > w ? 1 : floor(w / rad));
-    const rows = (rad > h ? 1 : floor(h / rad));
+    const cols = (radius > width ? 1 : floor(width / radius));
+    const rows = (radius > height ? 1 : floor(height / radius));
     // Size of horizontal & vertical grid unit
-    const xs = w / cols;
-    const ys = h / rows;
+    const xs = width / cols;
+    const ys = height / rows;
 
     const units = new Array(cols);
     for (let i = 0; i < cols; i++)
@@ -377,6 +377,7 @@ const CORE =
   // Helper for `near`.
   // - Do the actual distance calculation between a-->b.
   // - Update particle properties (ie. N, L, R) accordingly.
+  // - Taken from https://github.com/nagualdesign/Primordial-Particle-System
   calculate: function (world, state, pts, ai, bi, mod)
   {
     // avoid redundant calculation between the same two pts.
@@ -385,15 +386,15 @@ const CORE =
       return;
     }
 
-    const w2 = world.whalf;
-    const h2 = world.hhalf;
+    const w2 = world.width_half;
+    const h2 = world.height_half;
     const a = pts[ai];
     const b = pts[bi];
-    const dx = mod(b.x - a.x + w2, state.w) - w2;
-    const dy = mod(b.y - a.y + h2, state.h) - h2;
+    const dx = mod(b.x - a.x + w2, state.width) - w2;
+    const dy = mod(b.y - a.y + h2, state.height) - h2;
 
     // if distance is less than the radius
-    if (world.radsq >= dx * dx + dy * dy)
+    if (world.radius_squared >= dx * dx + dy * dy)
     {
       a.n++;
       b.n++;
@@ -420,7 +421,7 @@ const CORE =
 
   //////////////////////////////////////////////////////////////////////
   // The following are included in CORE so that headless execution /////
-  // will not have to pull in BRDG. ////////////////////////////////////
+  // would not have to pull in BRDG. ///////////////////////////////////
   //////////////////////////////////////////////////////////////////////
 
   // Given a (complete) state object in abbreviated form,
@@ -430,54 +431,22 @@ const CORE =
     const a = ABBREV;
     const s = STATE;
 
-    // Set global state.
     U.for_abbrev(a, function (key)
     {
       s[a[key]] = o[key];
     });
-    if (o.r) WORLD.radsq = o.r * o.r;
-    WORLD.whalf = STATE.w / 2;
-    WORLD.hhalf = STATE.h / 2;
 
-    // Set particles
-    const np = new Array(s.num);
-    let nl;
+    if (o.r) { WORLD.radius_squared = o.r * o.r; }
+    WORLD.width_half = s.width / 2;
+    WORLD.height_half = s.height / 2;
 
-    if (o.p)
-    {
-      // STATE.num has precedence over o.p.length
-      let p;
-      for (let i = 0; i < (o.p.length > s.num ? s.num : o.p.length);
-           i++)
-      {
-        p = o.p[i];
-        np[i] = new CORE.Pt(p.x, p.y, p.phi);
-        np[i].n = 0;
-        np[i].l = 0;
-        np[i].r = 0;
-        np[i].s = Math.sin(p.phi);
-        np[i].c = Math.cos(p.phi);
-      }
-      nl = o.p.length;
-    }
+    PTS = o.p;
+  },
 
-    else
-    {
-      for (let i = 0; i < s.num; i++)
-      {
-        np[i] = PTS[i];
-      }
-      nl = PTS.length;
-    }
-
-    // If new STATE.num is greater than either o.p.length (if provided)
-    // or the previous PTS.length.
-    for (let i = nl; i < s.num; i++)
-    {
-      np[i] = new CORE.Pt();
-    }
-
-    PTS = np;
+  // Hand over particles.
+  get_pts: function ()
+  {
+    return PTS;
   },
 
   // Hand over state in abbreviated form.
@@ -504,8 +473,8 @@ const CORE =
   {
     const params =
     {
-      w: STATE.w,
-      h: STATE.h,
+      w: STATE.width,
+      h: STATE.height,
     };
 
     Object.assign(params, CORE.get_params());
@@ -537,7 +506,7 @@ const CORE =
     for (let i = 0; i < lines.length; i++)
     {
       // Horizontal whitespace split
-      tmp[i] = lines[i].replace(/[\s\t]+/g, " ").split(" ");
+      tmp[i] = lines[i].replace(/[ \t]+/g, " ").split(" ");
     }
 
     const o =
@@ -557,6 +526,16 @@ const CORE =
       p: [],
     };
 
+    // Remove illegal entries completely for overlapping input (ie.
+    // file input + argument input) to work correctly
+    for (let key in o)
+    {
+      if (U.is_nil(o[key]))
+      {
+        delete o[key];
+      }
+    }
+
     for (let i = 1; i < lines.length; i++)
     {
       if (lines[i].replace(/\s+/g, "") != "")
@@ -565,9 +544,15 @@ const CORE =
         {
           x: parseFloat(tmp[i][1]),
           y: parseFloat(tmp[i][2]),
-          z: parseFloat(tmp[i][3]),
+          phi: parseFloat(tmp[i][3]),
         }
       }
+    }
+
+    // Again, remove p if empty
+    if (o.p.length === 0)
+    {
+      delete o.p;
     }
 
     return o;
@@ -575,12 +560,12 @@ const CORE =
 
   // Given a state object in abbreviated form, return its string
   // encoding.
-  encode: function (w, h, o)
+  encode: function (width, height, o)
   {
     // ignore width and height when encode is called, ie. when not
     // running headless.
-    let s = w.toString() + " " +
-            h.toString() + " " +
+    let s = width.toString() + " " +
+            height.toString() + " " +
             (o.t).toString() + " " +
             (o.o).toString() + " " +
             (o.f).toString() + " " +
@@ -602,9 +587,10 @@ const CORE =
   },
 
   // Check emptiness and validity, falling back to default values.
-  sanitise: function (o)
+  sanitise: function (o, fresh)
   {
     const a = ABBREV;
+    const w = WORLD;
     const s = STATE;
     const ds = STATED;
     const params = U.clone(o);
@@ -619,30 +605,80 @@ const CORE =
           (key === "w" && (value <= 0)) ||
           (key === "h" && (value <= 0)) ||
           (key === "o" && (value < 0 || value > 2)) ||
-          (["t", "f", "n", "z", "r", "d", "g"].includes(key) &&
+          (["t", "f", "n", "z", "d", "g"].includes(key) &&
            value < 0))
       {
         if (key === "w")
         {
-          params[key] = U.auto_width();
+          if (fresh)
+          {
+            params[key] = U.auto_width();
+          }
+          else
+          {
+            params[key] = s.width;
+          }
         }
         else if (key === "h")
         {
-          params[key] = U.auto_height(WORLD.gap);
-        }
-        else if (key === "r")
-        {
-          params[key] = U.auto_radius((params.w ? params.w : s.w),
-                                      (params.h ? params.h : s.h),
-                                      (params.d ? params.d : s.den),
-                                      (params.n ? params.n : s.num));
+          if (fresh)
+          {
+            params[key] = U.auto_height(w.gap);
+          }
+          else
+          {
+            params[key] = s.height;
+          }
         }
         else
         {
+          // Set value in STATED
           params[key] = ds[a[key]];
         }
       }
     });
+
+    // Treat radius separately because it requires other params
+    if (U.is_nil(params.r) || params.r <= 0)
+    {
+      params.r = U.auto_radius(params.w, params.h, params.d, params.n);
+    }
+    w.radius_squared = params.r * params.r;
+    w.speed = params.g * params.r;
+
+    // Treat particles
+    const np = new Array(params.n); // num has precedence wrt. size
+    let nl = 0;
+
+    if (!!o.p && o.p.length > 0)
+    {
+      let p;
+      for (let i = 0; i < (o.p.length > params.n ? params.n : o.p.length);
+           i++)
+      {
+        p = o.p[i];
+        np[i] = new CORE.Pt(p.x, p.y, p.phi);
+        np[i].n = 0;
+        np[i].l = 0;
+        np[i].r = 0;
+        np[i].sin = Math.sin(p.phi);
+        np[i].cos = Math.cos(p.phi);
+      }
+      nl = o.p.length;
+    }
+    else if (!!PTS && PTS.length > 0)
+    {
+      for (let i = 0; i < params.n; i++)
+      {
+        np[i] = PTS[i];
+      }
+      nl = PTS.length;
+    }
+    for (let i = nl; i < params.n; i++)
+    {
+      np[i] = new CORE.Pt();
+    }
+    params.p = np;
 
     return params;
   },

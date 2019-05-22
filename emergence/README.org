@@ -2,11 +2,11 @@
 
 ** About
 
-*Emergence* is a visualiser/processor of a primordial particle system and its emergent/interactive properties.
+*Emergence* is a rudimentary visualiser/processor of a primordial particle system and its emergent/interactive properties.
 
 Implementation is based on the article, /How a life-like system emerges from a simple particle motion law/, by  Schmickl, Stefanec, and Crailsheim: https://www.nature.com/articles/srep37969.
 
-There are two ways of using the program: graphically via the browser interface and headlessly via the commandline. The former allows the user to control various parameters and visually appreciate the effects, while the latter opens up possibilities for scripting, automation, and batch analyses.
+There are two ways of using the program: graphically via the browser interface and headlessly via the commandline. The former allows the user to control various parameters and visually appreciate the effects, while the latter opens up possibilities for automation, and batch analysis.
 
 ** Try
 
@@ -16,14 +16,14 @@ There are two ways of using the program: graphically via the browser interface a
 
 Point your (javascript-and-html5-capable) browser to =emergence/index.html=
 
-- For example, on a chromebook, download & unzip this repository, open a Chrome tab, and visit =file:///home/chronos/user/Downloads/emergence/index.html=.
+- For example, let us say you cloned this repository in the Downloads folder. You would open a browser tab and visit =file:///home/user/Downloads/mff/emergence/index.html=.
 
 - Commandline interface ::
 
 1. Have nodejs installed, https://nodejs.org/.
 1. Download this repository.
-1. On the commandline, go to the =emergence/= directory in the downloaded repository.
-1. Run =node core.js ...=. (try =-h= for quick help)
+1. On the commandline, go to the =emergence/= directory within the downloaded repository.
+1. Run =node core.js ...=
 
 *** Remotely
 
@@ -43,7 +43,118 @@ For more detailed help, see "Usage" section below.
 
 ** Usage
 
-** Development
+- User-controllable state parameters ::
+
+(Default values are in parentheses.)
+
+- =width= (browser|1000): world width
+- =height= (browser|1000): world height
+- =stop= (0): number of ticks of animation/computation
+- =distribution= (0): initial particle distribution scheme
+  - 0: uniform, 1: gaussian, 2: middle
+- =fps= (30): frames per second (applies to browser interface only)
+- =num= (4000): number of particles
+- =psize= (3): size of individual particles
+- =radius= (auto): radius of neighborhoods
+- =density= (8.0): "density" that factors in the auto-radius calculation
+- =alpha= (180.0): self-dependent direction of particles
+- =beta= (17.0): neighbor-dependent direction of particles
+- =gamma= (0.134): neighbor-based speed multiplier
+
+=density=, =alpha=, =beta=, and =gamma= are floating point numbers and the rest are integers. Except for =alpha= and =beta=, the numbers are expected to be at least 0, and in the case of =width= and =height= strictly greater than 0.
+
+- Browser interface ::
+
+Usage with the browser is straightforward -- buttons, input areas, and mouse-clicking being the only means of direct control.
+
+The HELP button at the top-left corner outlines basic usage and repeats some of the information presented in this readme.
+
+Interface structure:
+
+- Bar at the top:
+  - Left:
+    - PAUSE/RESUME: The label switches, based on the animation state.
+    - HELP: Opens the "help" dialog box.
+    - LOAD: Opens the "load" dialog box.
+      - Text area: Type in state string directly.
+      - READ IN FILE: Open a file to load its contents into the text area.
+      - APPLY: Apply the world state to be whatever string is in the text area.
+    - SAVE: Opens the "save" dialog box.
+      - Text area: When the dialog box appears, this area gets automatically filled with a snapshot of world state. Modifiable.
+      - SAVE TO FILE: Save the contents of the text area into a file.
+      - COPY STATE: Copy the contents of the text area into the clipboard.
+    - Dialog boxes (aka. "modals"): Size is proportional to the window size. Scrollable. Only way to close the dialog box is by clicking the "close" button at top-left.
+    - Note: Clicking HELP, LOAD, or SAVE pauses animation until the user clicks RESUME or the canvas.
+  - Middle:
+    - History slider: Slide around to visit earlier snapshots of the animation.
+    - "x": Select the color theme.
+    - "c": Select the world "configuration" (ie. predefined/interesting alpha and beta values).
+    - "o": Select the initial particle distribution scheme.
+      - Note: Selection will reanimate a new world from scratch.
+    - "t": The =stop= parameter.
+    - RANDOM: Set the =alpha= and =beta= parameters randomly and reanimate from scratch.
+  - Right:
+    - APPLY: Merge all the parameters into the running world state, transitioning immediately to the new state.
+    - RESTART: Set the world state as the parameters, and reanimate from scratch.
+    - "f", "n", "z", "r", "d", "alpha", "beta", "gamma": The =fps=, =num=, =psize=, =radius=, =density=, =alpha=, =beta=, and =gamma= parameters respectively.
+  - Note: Leaving a parameter empty, and clicking APPLY or RESTART or making a selection (of the Middle section) will reset that parameter to its default value.
+- The canvas:
+  - This is an HTML5 Canvas object and all the rendering that takes place therein is computed internally, mostly by =view.js=.
+  - Can be clicked to toggle animation, exactly like the PAUSE/RESUME button.
+
+- Commandline interface ::
+
+#+BEGIN_SRC
+Usage: node core.js [ -?/-h/--help | -f/--file FILE [STRING] | STRING ]
+#+END_SRC
+
+- An example: =node core.js ″500 500 200″ > base.txt && node core.js -f base.txt ″_ _ 600″=
+  - This runs the computation in a 500-by-500 world for 200 ticks and saves the resulting state to a file called =base.txt=. Once that completes, computation is run again but with the =base.txt= file passed in as the initial state and the number of ticks overridden to be 600. The result of this second run is printed to standard output.
+- Only the resulting state is printed to standard output. Everything else, like info messages and any post-computation analyses, is printed to standard error.
+- Note: Passing state via standard input is currently not supported.
+
+- Input format ::
+
+- The "input state string" is a string of 0 or more lines. Each line is itself a string of numbers, separated by horizontal whitespace.
+  - The first line has the format =width height stop distr fps num psize radius density alpha beta gamma=.
+  - Every line thereafter denotes a particle, and the format there is =index x-coordinate y-coordinate phi=, where =index= is the particle number starting from 1, and =phi= is the particle heading (ie. its direction).
+  - If any of these values are unparseable, the program silently falls back to default values (or random values in the case of particle attributes). If the entire input is empty, the commandline will default, and the browser will print a warning message.
+- The state string may be incomplete (ie. partially specified). In such cases, parameters are extracted in-order and left-to-right. So, as seen in an earlier example, an input string with three numbers effectively specifies just the width, height, and stop, keeping everything else at their respective default values. In order to specify parameters non-consecutively, the =_= symbol (or any other non-numeric string) can be used in the place of unwanted parameters.
+  - Here is another example of the first line. =200 200 100 0 _ 50= specifies a 200-by-200 world, running for 100 ticks, with 50 particles in uniform initial distribution. All other parameters (specifically, the underscored /fps/) are set to default values.
+  - The particle lines (ie. lines 2 until end) are optional. But if they are to be specified, certain things ought to be kept in mind.
+    - =index= is not parsed at all. It is only there for user convenience and gets regenerated on the next save.
+    - Illegal =x=, =y=, and =phi= values will be ignored and random values will be set in their place.
+
+- Saving & loading ::
+
+Browser interface:
+
+- As mentioned in "Usage" above, saving and loading is done through the SAVE and LOAD buttons respectively in the top-right corner.
+  - The name of the save file is predetermined.
+  - Clicking APPLY in the load dialog box loads the new world and immediately starts the animation.
+
+Commandline interface:
+
+- Maybe not "saving" per se, but the output of the program represents a final state of the world. Analogously, the argument string/file to the program represents an initial state of the world. These are the only ways to save and load via the commandline.
+
+- Gotchas & interoperation ::
+
+Hopefully, both headless and headed operations will be intuitive to the user, and switching between the two should be seamless since the same state string format is used everywhere, as far as the user is concerned. However, there are still a few quirks to keep in mind.
+
+Number of ticks until stop:
+
+- On the browser, the default behavior is to animate indefinitely until explicit user intervention. On the commandline, however, a =stop= value of 0 means that the initial state gets printed and no real computation gets done. The user should therefore specify the third, =stop=, parameter to actually "run" the world.
+
+World dimensions:
+
+- On the browser, the world naturally adopts the size of the browser. On the commandline, the world defaults to 1000 by 1000 (virtual units) if the user does not provide dimensions.
+- If specific dimensions are fed directly into the browser, by pasting the output of a prior commandline execution or otherwise, the input is scaled onto the actual browser canvas. (That is, of course, if the two sizes do not match up exactly.) So, for instance, if the browser window is huge but the size of the world has been set to only 100 by 100, the particles will appear relatively huge as well.
+
+=num= vs =pts.length=:
+
+- The =num= parameter explicitly indicates the number of particles, but the length of the particles array does so implicitly as well. The ambiguity is resolved by giving =num= (or its default value if unspecified) precedence every time. So, for example, a =num= value set to 50, but with 4 particles listed in the input, will create 4 particles as enumerated, but then 46 more random particles will also be created. On the other hand, if =num= is set to 4 and 50 particles are specified individually, then the list gets truncated, and only the first 4 particles will get rendered.
+
+** Development notes
 
 *** Files
 
@@ -79,52 +190,17 @@ The ability to reuse one =core.js= file between the browser and the commandline 
 - =WORLD=, =STATE=, and =PTS= together make up this central data store. They cover aspects like canvas dimensions, particle size, colors, direction parameters, and almost everything else.
 - Of the 3 variables, =PTS= is a just a simple list of particles, where each particle holds information about its own location, heading, and neighbor count.
 - =WORLD= and =STATE= are objects that contain information that particles need in order to exist, move, and get drawn. The two variables have basically the same kind and purpose, except for the fact that =STATE= gets saved and loaded, whereas =WORLD= does not. To put it another way, =STATE= represents the core information that the program needs in order to recreate that entire world again, for any of the user interfaces.
+- Internally, the state data is passed around as javascript objects, but to the user, state is represented by a multiline string. The format of the string has been dealt with in "Usage" above.
 
-- state string format ::
+- history ::
 
-Internally, the state data is passed around as javascript objects, but to the user, state is represented by a multiline string, with the following format:
+- The state snapshot history is synchronised with the slider in the browser interface.
+- The method of updating the history is outlined in comments in the source, but will be briefly mentioned here.
+  - History consists of a sequence of buffer snapshots and a sequence of actual, slidable snapshots.
+  - First of all, an interval size (= 100 ticks) is fixed. For the first interval (ie. the first 100 ticks), the actual snapshot sequence (or "history proper") gets filled. For every subsequent interval, only the buffer gets filled. And at each checkpoint, the buffer gets merged into the history proper, and the buffer index is reset to zero. Then this process repeats.
+  - The method of merging the buffer into the history proper is a lossy and logarithmic one. The two sequences each get squashed into half their size, and the new history proper becomes the squashed old history proper concatenated with the squashed buffer.
 
-#+BEGIN_SRC
-width height stop distr fps num psz rad den alpha beta gamma
-1  pt[1].x  pt[1].y  pt[1].phi
-2 ...
-...
-#+END_SRC
+- color ::
 
-The meaning of the items are commented in =core.js=. Every item represents a number that is separated by horizontal and vertical whitespaces as seen in the above snippet. The =dens=, =alpha=, =beta=, and =gamma= parameters are floating point numbers and the rest are integers. The numbers are all expected to be >= 0 (=width= and =height= > 0), except for =alpha= and =beta=.
-
-This string can be passed in in one of three ways: (1) as an argument to the commandline interface; (2) saved in a text file and also passed in as an argument to the commandline; or (3) pasted in through the browser interface's LOAD button.
-
-Furthermore, the state string may be incomplete, but parameters will be extracted sequentially, left-to-right. To specify parameters non-consecutively, the "_" symbol (or any other non-numeric string) can be used in the place of parameters that the user wishes to leave unspecified and default.
-
-- For example, an input string of "200 200 100 1" assigns /width/ and /height/ to 200 pixels, /stop/ to 100 ticks, and /distr/ to 1 (= gaussian distribution), but the other particles will be left at their default values.
-- Another example is the input string of "200 200 100 0 _ 50", which specifies a 200-by-200 world, running for 100 ticks, with uniform initial distribution of 50 particles. All other parameters (specifically the underscored /fps/) are set to default.
-
-- saving & loading ::
-
-Browser interface:
-
-- Saving is done by clicking the SAVE button in the top-right corner. This snapshot of the world (ie. of the moment when SAVE was clicked) can be copied onto the clipboard or saved to a file. The name of the save file is predetermined.
-- Loading is done by clicking the LOAD button in the top-right corner. The user can feed in a file, or type in the state string directly. Clicking APPLY loads the new world and immediately starts the animation.
-
-Commandline interface:
-
-- Maybe not "saving" per se, but the output of the program represents a final state of the world. Analogously, the argument string/file to the program represents an initial state of the world. These are the only ways to save and load via the commandline.
-
-- gotchas & interoperation ::
-
-Hopefully, both headless and headed operations will be intuitive to the user, and switching between the two should be seamless as the same state string format is used everywhere, as far as the user is concerned. However, there are a few quirks to keep in mind.
-
-Number of ticks until stop:
-
-- On the browser, the default behavior is to animate indefinitely until explicit user intervention. On the commandline, however, because signal handling has not been implemented yet, the program maintains a default stop value of 0 ticks, which means that, besides initial world creation, no computation is done. The user should therefore specify the third parameter on the first line of the state string for any computation to be done.
-
-World dimensions:
-
-- On the browser, the world naturally adopts the size of the browser. On the commandline, the world defaults to 1000 by 1000 (virtual units) if the user does not provide the dimensions.
-- If specific dimensions are fed directly into the browser, by pasting the output of a prior commandline execution or otherwise, the input is scaled onto the actual browser canvas. (That is, of course, if the two sizes do not match up exactly.) So, for instance, if the browser window is huge but the size of the world has been set to only 100 by 100, the particles will appear relatively huge as well.
-
-=num= vs =pts.length=:
-
-- The number of particles in the world is encoded in two distinct ways: By the =STATE.num= variable and the size of the input particle list. In all cases, =STATE.num= holds precedence. In the case that these two values differ, the listed particles are preserved as much as possible, but truncated if their number is greater than =STATE.num= or padded with new random particles if less than =STATE.num=.
+- Coloring is achieved by a single formula defined in =bridge.hue()=: =((neighbors * 60 / density) + offset) mod 360=. "Offset" is a shift in hue to make the particles look nice on different background colors.
 

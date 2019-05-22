@@ -26,17 +26,15 @@ const VIEW =
   },
 
   // Reinitialise View.
-  reinit: function (fresh, clear)
+  reinit: function (clear)
   {
     const w = BRDG.get_world();
     const s = BRDG.get_state();
-    if (fresh)
-    {
-      BRDG.set_tick(0); // which also disables slider via VIEW.toggle()
-    }
     if (clear)
     {
-      VIEW.erase(w.c, s.w, s.h);
+      BRDG.set_tick(0); // which also disables slider via VIEW.toggle()
+      BRDG.clear_theme_cache();
+      VIEW.erase(w.context, s.width, s.height);
     }
     if (w.tick < s.stop)
     {
@@ -47,10 +45,14 @@ const VIEW =
   // Load parameters, reset view, and continue (or start) drawing.
   start: function (raw, fresh, clear, pause)
   {
-    VIEW.reinit(fresh, clear);
-    let params = CORE.sanitise(raw);
+    VIEW.reinit(clear);
+    const params = CORE.sanitise(raw, fresh);
+    const s = BRDG.get_state();
+    const sw = s.width / params.w;
+    const sh = s.height / params.h;
     CORE.set(params);
     CORE.init(fresh);
+    VIEW.scale(BRDG.get_world().context, s.width, s.height, sw, sh);
     VIEW.put_params(params);
     BRDG.pause(); // to register new fps
     if (!pause)
@@ -68,7 +70,7 @@ const VIEW =
     {
       button.value = "PAUSE";
       animate = setInterval(tick, (1000 / fps));
-      if (WORLD.tick < WORLD.hbsz)
+      if (WORLD.tick < WORLD.history_size)
       {
         VIEW.slider_disable();
       }
@@ -83,22 +85,35 @@ const VIEW =
   },
 
   // Clear canvas.
-  erase: function (c, w, h)
+  erase: function (context, width, height)
   {
-    c.clearRect(0, 0, w, h);
+    context.clearRect(0, 0, width, height);
   },
 
   // Draw particles on canvas.
-  paint: function (c, pts, n, w, h, rad, hue, avg, theme)
+  paint: function (context, pts, n, width, height, size, hue, density,
+                   theme)
   {
     let p;
-    VIEW.erase(c, w, h);
+    VIEW.erase(context, width, height);
     for (let i = 0; i < n; i++)
     {
       p = pts[i];
-      c.fillStyle = "hsl(" + hue(p.n, avg, theme) + ",100%,50%)";
-      c.fillRect(p.x, p.y, rad, rad);
+      context.fillStyle = "hsl(" + hue(p.n, density, theme[0]) +
+                          ",100%,50%)";
+      if (p.n === 0)
+      {
+        context.fillStyle = theme[3] + "40";
+      }
+      context.fillRect(p.x, p.y, size, size);
     }
+  },
+
+  // Scale the canvas.
+  scale: function (context, width, height, scaled_width, scaled_height)
+  {
+    VIEW.erase(context, width, height);
+    context.scale(scaled_width, scaled_height);
   },
 
   // Hand over HTML canvas object and its 2D context.
@@ -107,16 +122,16 @@ const VIEW =
     const c = document.querySelector("canvas");
     return {
       canvas: c,
-      c: c.getContext("2d"),
+      context: c.getContext("2d"),
     };
   },
 
   // Hand over page dimensions.
-  get_dimensions: function (gap)
+  get_dimensions: function ()
   {
     return {
-      w: window.innerWidth,
-      h: window.innerHeight - gap,
+      width: window.innerWidth,
+      height: window.innerHeight - BRDG.get_world().gap,
     };
   },
 
@@ -174,8 +189,9 @@ const VIEW =
   {
     const msg = VIEW.message_clear("save");
     const area = document.querySelector(".textarea.save");
-    const dim = VIEW.get_dimensions(WORLD.gap);
-    area.value = CORE.encode(dim.w, dim.h, CORE.get_snapshot());
+    const dim = VIEW.get_dimensions();
+    area.value = CORE.encode(dim.width, dim.height,
+                             CORE.get_snapshot());
     VIEW.modal_reset("save", function()
     {
       area.focus();
@@ -183,6 +199,13 @@ const VIEW =
       area.scrollTop = 0;
     });
     BRDG.pause();
+  },
+
+  // Handle "RANDOM" button on bar.
+  button_bar_random: function ()
+  {
+    VIEW.start(Object.assign(VIEW.get_params(), UTIL.randomise()),
+               true, true);
   },
 
   // Handle "RESTART" button on bar.
@@ -209,7 +232,7 @@ const VIEW =
         throw "empty state";
       }
       VIEW.button_bar_load();
-      VIEW.start(parsed, true, true);
+      VIEW.start(parsed, !!parsed.w || !!parsed.h, true);
       if (DEBUG) { console.log("(button_modal_apply) applied"); }
     }
     catch(err)
@@ -327,31 +350,28 @@ const VIEW =
     const theme = BRDG.set_theme(parseInt(
       document.getElementById("param_x").value));
     BRDG.clear_theme_cache();
-    document.getElementById("bar").style.backgroundColor = theme[0];
-    document.querySelector("canvas").style.backgroundColor = theme[1];
+    document.getElementById("bar").style.backgroundColor = theme[1];
+    document.querySelector("canvas").style.backgroundColor = theme[2];
     const spans = document.querySelectorAll("span.param");
     for (let i = 0; i < spans.length; i++)
     {
-      spans[i].style.color = theme[2];
+      spans[i].style.color = theme[3];
     }
     BRDG.paint();
   },
 
   // Handle selection of initial particle distribution scheme.
-  select_distr: function ()
+  select_distribution: function ()
   {
-    if (DEBUG) { console.log("(select_distr)"); }
-    const params = VIEW.get_params();
-    params.o = parseInt(document.getElementById("param_o").value);
-    BRDG.clear_theme_cache();
-    VIEW.start(params, true, true);
+    if (DEBUG) { console.log("(select_distribution)"); }
+    VIEW.start(VIEW.get_params(), true, true);
   },
 
   // Handle user sliding of history slider.
   slider_load: function ()
   {
     BRDG.pause();
-    CORE.set(BRDG.get_history().snaps[this.value - 1]);
+    CORE.set(CORE.sanitise(BRDG.get_history().snaps[this.value - 1]));
     BRDG.set_tick(this.value);
     BRDG.paint();
   },
@@ -417,11 +437,11 @@ const VIEW =
       {
         return;
       }
-      if (["t", "o", "f", "n", "z", "r"].includes(key))
+      if (["t", "o", "f", "n", "r"].includes(key))
       {
         f = parseInt;
       }
-      else if (["d", "a", "b", "g"].includes(key))
+      else if (["z", "d", "a", "b", "g"].includes(key))
       {
         f = parseFloat;
       }

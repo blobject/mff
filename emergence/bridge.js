@@ -32,13 +32,13 @@ const BRDG =
   // Retrieve and world-set canvas dimensions.
   measure: function ()
   {
-    const dim = VIEW.get_dimensions(WORLD.gap);
-    WORLD.canvas.width = dim.w;
-    WORLD.canvas.height = dim.h;
-    STATE.w = dim.w;
-    STATE.h = dim.h;
-    WORLD.whalf = STATE.w / 2;
-    WORLD.hhalf = STATE.h / 2;
+    const dim = VIEW.get_dimensions();
+    WORLD.canvas.width = dim.width;
+    WORLD.canvas.height = dim.height;
+    STATE.width = dim.width;
+    STATE.height = dim.height;
+    WORLD.width_half = STATE.width / 2;
+    WORLD.height_half = STATE.height / 2;
   },
 
   // Handle canvas resize event.
@@ -68,7 +68,7 @@ const BRDG =
   {
     if (WORLD.paused)
     {
-      if (WORLD.tick < WORLD.hbsz)
+      if (WORLD.tick < WORLD.history_size)
       {
         VIEW.slider_disable();
       }
@@ -113,14 +113,14 @@ const BRDG =
     const s = CORE.get_snapshot();
     const h = HIST;
     const k = w.tick;
-    const z = w.hbsz;
+    const z = w.history_size;
     const tick = k % z;
 
     // Update by merging in buffer
     if (tick === 0)
     {
       // HTML slider is disabled by default and only gets enabled when
-      // `tick` passes `hbsz`.
+      // `tick` passes `history_size`.
       if (k === z)
       {
         VIEW.slider_set(100);
@@ -163,37 +163,38 @@ const BRDG =
   {
     const w = WORLD;
     const s = STATE;
-    VIEW.paint(w.c, PTS, s.num, s.w, s.h, s.psz, BRDG.hue, w.crowd,
-               w.theme);
+    VIEW.paint(w.context, PTS, s.num, s.width, s.height, s.psize,
+               BRDG.hue, s.density, w.theme);
   },
 
   // Given a particular neighborhood size, and a global average
   // neighborhood size, determine the color.
-  // - Caching is used for performance optimisation.
-  hue: function (n, avg, theme)
+  // - Caching is used.
+  hue: function (n, density, theme)
   {
     const h = WORLD.hues;
 
-    if (h[n] === undefined)
+    if (UTIL.is_nil(h[n]))
     {
-      let c;
-      if (n <= avg)
+      let c = 0;
+      if (theme === 0 || theme === 4)
       {
-        c = theme[3];
+        c = 180;
       }
-      else if (n <= 2 * avg)
+      else if (theme === 1)
       {
-        c = theme[4];
+        c = 60;
       }
-      else if (n <= 4 * avg)
+      else if (theme === 2)
       {
-        c = theme[5];
+        c = 90;
       }
-      else
+      else if (theme === 3)
       {
-        c = theme[6];
+        c = 230;
       }
-      h[n] = c;
+      // Taken from https://github.com/nagualdesign/Primordial-Particle-System
+      h[n] = UTIL.mod((n * 60 / density) + c, 360);
     }
 
     return h[n];
@@ -221,12 +222,6 @@ const BRDG =
   get_history: function ()
   {
     return HIST;
-  },
-
-  // Hand over particles.
-  get_pts: function ()
-  {
-    return PTS;
   },
 
   // Hand over parameter name listing.

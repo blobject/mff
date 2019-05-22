@@ -16,7 +16,11 @@ function headless()
 const UTIL =
 {
 
-  tau: Math.PI * 2, // not using TAU in core.js because of headless
+  // numeric constants /////////////////////////////////////////////////
+
+  TAU: Math.PI * 2,
+
+  NDISTR: 3, // number of distribution options
 
   // javascript ////////////////////////////////////////////////////////
 
@@ -49,12 +53,12 @@ const UTIL =
 
   rad: function (n)
   {
-    return n / 360 * UTIL.tau;
+    return n / 360 * UTIL.TAU;
   },
 
   deg: function (n)
   {
-    return n * 360 / UTIL.tau;
+    return n * 360 / UTIL.TAU;
   },
 
   uniform: function (n)
@@ -68,7 +72,7 @@ const UTIL =
     let b = 0;
     while (a === 0) { a = Math.random(); }
     while (b === 0) { b = Math.random(); }
-    let x = Math.sqrt(-2 * Math.log(a)) * Math.cos(UTIL.tau * b);
+    let x = Math.sqrt(-2 * Math.log(a)) * Math.cos(UTIL.TAU * b);
     x = (x / 10) + 0.5;
     if (x > 1 || x < 0) { return UTIL.gaussian(n); }
     return x * n;
@@ -81,6 +85,16 @@ const UTIL =
     return (Math.random() * n / factor) + (n / 2) - (n / 2 / factor);
   },
 
+  // Generate random alpha, beta, and gamma values
+  randomise: function ()
+  {
+    return ({
+      a: (Math.random() * 360 - 180).toFixed(2),
+      b: (Math.random() * 180 - 90).toFixed(2),
+      g: (Math.random() * 0.5).toFixed(2),
+    });
+  },
+
   // parameters ////////////////////////////////////////////////////////
 
   // Prepare state for core computation.
@@ -90,8 +104,8 @@ const UTIL =
   {
     const u = UTIL;
     const o = u.clone(state);
-    if (o.a) { o.a = u.rad(o.a); }
-    if (o.b) { o.b = u.rad(o.b); }
+    if (o.alpha) { o.alpha = u.rad(o.alpha); }
+    if (o.beta) { o.beta = u.rad(o.beta); }
     return o;
   },
 
@@ -120,9 +134,12 @@ const UTIL =
   },
 
   // A predefined neighborhood radius value, if not provided by user.
-  auto_radius: function (w, h, d, n)
+  // - Taken from https://github.com/nagualdesign/Primordial-Particle-System
+  auto_radius: function (width, height, density, num)
   {
-    return Math.round(Math.sqrt(w * h * d / n / Math.PI));
+    const r = Math.round(Math.sqrt(width * height * density /
+                                   num / Math.PI));
+    return r > 0 ? r : 1;
   },
 
   // Helper for iterating through all parameter abbreviations.
@@ -140,21 +157,21 @@ const UTIL =
   // Print out some of the world state.
   debug_params: function (world, state)
   {
-    const o = state.distr;
+    const o = state.distribution;
     console.log("EMERGENCE\n---------" +
-                "\nwidth  = " + state.w +
-                "\nheight = " + state.h +
-                "\nstop   = " + state.stop +
-                "\ndistr  = " + (o === 0 ? "uniform" : (o === 1 ? "gaussian" : (o === 2 ? "middle" : "ERROR"))) +
-                "\nfps    = " + state.fps +
-                "\nnum    = " + state.num +
-                "\npt-sz  = " + state.psz +
-                "\nrad    = " + state.rad +
-                "\ndens   = " + state.den +
-                "\nalpha  = " + state.a +
-                "\nbeta   = " + state.b +
-                "\ngamma  = " + state.g +
-                "\nspeed  = " + world.speed +
+                "\nwidth   = " + state.width +
+                "\nheight  = " + state.height +
+                "\nstop    = " + state.stop +
+                "\ndistr.  = " + (o === 0 ? "uniform" : (o === 1 ? "gaussian" : (o === 2 ? "middle" : "ERROR"))) +
+                "\nfps     = " + state.fps +
+                "\nnum     = " + state.num +
+                "\npt-size = " + state.psize +
+                "\nradius  = " + state.radius +
+                "\ndensity = " + state.density +
+                "\nalpha   = " + state.alpha +
+                "\nbeta    = " + state.beta +
+                "\ngamma   = " + state.gamma +
+                "\nspeed   = " + world.speed +
                 "\n---------");
   },
 };
@@ -163,6 +180,8 @@ if (headless())
 {
   module.exports =
   {
+    TAU: UTIL.TAU,
+    NDISTR: UTIL.NDISTR,
     is_nil: UTIL.is_nil,
     clone: UTIL.clone,
     mod: UTIL.mod,
