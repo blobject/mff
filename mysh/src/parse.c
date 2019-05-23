@@ -89,7 +89,7 @@ check(const char* line)
 
 /*
  * fill_words
- * - Helper to parse()'s structure-filling. 3 levels deep.
+ * - Helper to parse()'s structure-filling. This is at depth level 3.
  */
 int
 fill_words(char* str, struct ltok* fill)
@@ -140,7 +140,7 @@ fill_words(char* str, struct ltok* fill)
 
 /*
  * fill_cmds
- * - Helper to parse()'s structure-filling. 2 levels deep.
+ * - Helper to parse()'s structure-filling. This is at depth level 2.
  */
 int
 fill_cmds(char* str, struct lltok* fill)
@@ -234,7 +234,7 @@ fill_cmds(char* str, struct lltok* fill)
 
 /*
  * fill_semis
- * - Helper to parse()'s structure-filling. 1 levels deep.
+ * - Helper to parse()'s structure-filling. This is at depth level 1.
  */
 int
 fill_semis(char* str, struct llltok* fill)
@@ -567,8 +567,8 @@ eval(const struct llltok* semis)
 /*
  * redir
  * - Detect read/write/append redirection ("<" / ">" / ">>"
- *   respectively), returning the string (argument variable) and the
- *   index at which the redirection occurs (return value).
+ *   respectively), returning the string (as argument) and the index at
+ *   which the redirection occurs (as return value).
  */
 int
 redir(char type, const char* line, char** s)

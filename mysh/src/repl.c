@@ -76,7 +76,7 @@ eh_init(char* me)
 }
 
 /*
- * eh_init
+ * eh_end
  * - Finalise libedit stuff.
  */
 void
