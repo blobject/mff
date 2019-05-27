@@ -323,8 +323,8 @@ parse(char* line, struct llltok* all)
 void
 child_sigint_handler(int sig)
 {
-    (void)sig;
-    LASTOK = ERR_SIG;
+    warnx("Killed by signal %d", sig);
+    LASTOK = ERR_SIG + sig;
 }
 
 /*

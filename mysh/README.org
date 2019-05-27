@@ -94,4 +94,4 @@ build dependencies: make, clang, libedit
 - phase 2 more ::
   - :-D github [[https://github.com/agarick/mff/issues/2][#2]]
   - :-S unit testing (too many things to test a posteriori, gave up)
-  - :-D various issues (see github [[https://github.com/agarick/mff/issues/13][#13]], [[https://github.com/agarick/mff/issues/14][#14]], [[https://github.com/agarick/mff/issues/15][#15]], [[https://github.com/agarick/mff/issues/16][#16]])
+  - :-D various issues (see github [[https://github.com/agarick/mff/issues/13][#13]], [[https://github.com/agarick/mff/issues/14][#14]], [[https://github.com/agarick/mff/issues/15][#15]], [[https://github.com/agarick/mff/issues/16][#16]], [[https://github.com/agarick/mff/issues/17][#17]])
