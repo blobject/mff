@@ -641,8 +641,6 @@ redir(char type, const char* line, char** s)
         found = 0;
     }
 
-    free(line_cp);
-
     return where;
 }
 
