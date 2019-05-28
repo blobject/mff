@@ -176,6 +176,18 @@ rinse(struct llltok* semis)
                 free(word);
             }
             free(words);
+            if (cmd->red_r)
+            {
+                free(cmd->red_r);
+            }
+            if (cmd->red_w)
+            {
+                free(cmd->red_w);
+            }
+            if (cmd->red_a)
+            {
+                free(cmd->red_a);
+            }
             TAILQ_REMOVE(&cmds->head, cmd, list);
             free(cmd);
         }

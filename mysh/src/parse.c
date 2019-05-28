@@ -151,6 +151,7 @@ fill_cmds(char* str, struct lltok* fill)
     char* c_cp;
     char* c_end = NULL;
     char* c_new;
+    int ok;
     int red;
     char* red_r;
     char* red_w;
@@ -163,9 +164,21 @@ fill_cmds(char* str, struct lltok* fill)
         red_w = NULL;
         red_a = NULL;
 
-        redir('r', c, &red_r);
-        red = redir('w', c, &red_w);
-        if (redir('a', c, &red_a) > red)
+        if (redir('r', c, &red_r) < -1)
+        {
+            return 1;
+        }
+        ok = redir('w', c, &red_w);
+        if (ok < -1)
+        {
+            return 1;
+        }
+        red = redir('a', c, &red_a);
+        if (red < -1)
+        {
+            return 1;
+        }
+        if (red > ok)
         {
             red_w = NULL;
         }
@@ -571,7 +584,7 @@ eval(const struct llltok* semis)
  *   which the redirection occurs (as return value).
  */
 int
-redir(char type, const char* line, char** s)
+redir(char type, char* line, char** s)
 {
     char sign = '>';
     unsigned long signlen = 1;
@@ -580,19 +593,19 @@ redir(char type, const char* line, char** s)
     int where = -1;
     char* word_end = NULL;
     char* word;
+    char* word_cp;
     char* line_cp;
 
     line_cp = malloc(sizeof(char) * LIM);
     if (line_cp == NULL)
     {
         warnx("malloc error");
-        return 1;
+        return -2;
     }
     if (strlen(line) > LIM)
     {
         warnx("input truncated");
     }
-
     strcpy(line_cp, line);
 
     if (type == 'r')
@@ -608,18 +621,30 @@ redir(char type, const char* line, char** s)
     while (word != NULL)
     {
         ++count;
-
-        if (word[0] == sign                      // a redirection symbol
-            && (type != 'a' || word[1] == sign)  // if 'a' then ">>"
-            && (type != 'w' || word[1] != sign)) // if 'w' then not ">>"
+        word_cp = malloc(sizeof(char) * LIM);
+        if (word_cp == NULL)
         {
-            if (strlen(word) == signlen)
+            warnx("malloc error");
+            free(line_cp);
+            return -2;
+        }
+        if (strlen(word) > LIM)
+        {
+            warnx("input truncated");
+        }
+        strcpy(word_cp, word);
+
+        if (word_cp[0] == sign                      // a redirection symbol
+            && (type != 'a' || word_cp[1] == sign)  // if 'a' then ">>"
+            && (type != 'w' || word_cp[1] != sign)) // if 'w' then not ">>"
+        {
+            if (strlen(word_cp) == signlen)
             {
-                found = 1;
+                found = 1; // fast-forward to next word
             }
             else
             {
-                *s = ++word;
+                *s = ++word_cp;
                 if (type == 'a')
                 {
                     ++(*s);
@@ -629,17 +654,41 @@ redir(char type, const char* line, char** s)
             }
         }
 
+        free(word_cp);
         word = strtok_r(NULL, " \t", &word_end);
+        if (!word)
+        {
+            found = 0;
+            continue;
+        }
+
+        word_cp = malloc(sizeof(char) * LIM);
+        if (word_cp == NULL)
+        {
+            warnx("malloc error");
+            free(line_cp);
+            return -2;
+        }
+        if (strlen(word) > LIM)
+        {
+            warnx("input truncated");
+        }
+        strcpy(word_cp, word);
 
         if (found == 1)
         {
-            *s = word;
+            *s = word_cp;
             trim(s);
             where = count + 1;
+        }
+        else
+        {
+            free(word_cp);
         }
 
         found = 0;
     }
+    free(line_cp);
 
     return where;
 }

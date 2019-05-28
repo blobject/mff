@@ -112,7 +112,7 @@ int loop_body(struct eh*, const char*);
 struct eh* eh_init(char*);
 void eh_end(struct eh*);
 int check(const char*);
-int redir(char, const char*, char**);
+int redir(char, char*, char**);
 char* unred(const char*);
 void sigint_handler(int);
 
