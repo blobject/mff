@@ -2,6 +2,7 @@
 
 - nprg005 (non-procedural) ::
   - *[[npp][npp]]*
+  - *[[lambda][lambda]]*
 
 - nprg041 (c++) ::
   - *[[array][array]]*
