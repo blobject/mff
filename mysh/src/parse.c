@@ -121,7 +121,10 @@ fill_words(char* str, struct ltok* fill)
         }
 
         strcpy(w_cp, w);
-        trim(&w_cp);
+        if (w_cp)
+        {
+          trim(&w_cp);
+        }
         if (white(w_cp))
         {
             free(w_cp);
@@ -621,40 +624,46 @@ redir(char type, char* line, char** s)
     while (word != NULL)
     {
         ++count;
-        word_cp = malloc(sizeof(char) * LIM);
-        if (word_cp == NULL)
+        if (word[0] == sign                      // a redirection symbol
+            && (type != 'a' || word[1] == sign)  // if 'a' then ">>"
+            && (type != 'w' || word[1] != sign)) // if 'w' then not ">>"
         {
-            warnx("malloc error");
-            free(line_cp);
-            return -2;
-        }
-        if (strlen(word) > LIM)
-        {
-            warnx("input truncated");
-        }
-        strcpy(word_cp, word);
-
-        if (word_cp[0] == sign                      // a redirection symbol
-            && (type != 'a' || word_cp[1] == sign)  // if 'a' then ">>"
-            && (type != 'w' || word_cp[1] != sign)) // if 'w' then not ">>"
-        {
-            if (strlen(word_cp) == signlen)
+            if (strlen(word) == signlen)
             {
                 found = 1; // fast-forward to next word
             }
             else
             {
-                *s = ++word_cp;
+                word_cp = malloc(sizeof(char) * LIM);
+                if (word_cp == NULL)
+                {
+                    warnx("malloc error");
+                    free(line_cp);
+                    return -2;
+                }
+                if (strlen(word) > LIM)
+                {
+                    warnx("input truncated");
+                }
+                strcpy(word_cp, word);
+
+                /* consider only the last */
+                if (s)
+                {
+                    free(*s);
+                }
+
+                *s = word_cp;
+                memmove(*s, *s + 1, strlen(*s));
+                trim(s);
                 if (type == 'a')
                 {
-                    ++(*s);
+                    memmove(*s, *s + 1, strlen(*s));
                 }
-                trim(s);
                 where = count;
             }
         }
 
-        free(word_cp);
         word = strtok_r(NULL, " \t", &word_end);
         if (!word)
         {
@@ -662,28 +671,30 @@ redir(char type, char* line, char** s)
             continue;
         }
 
-        word_cp = malloc(sizeof(char) * LIM);
-        if (word_cp == NULL)
-        {
-            warnx("malloc error");
-            free(line_cp);
-            return -2;
-        }
-        if (strlen(word) > LIM)
-        {
-            warnx("input truncated");
-        }
-        strcpy(word_cp, word);
-
         if (found == 1)
         {
+            word_cp = malloc(sizeof(char) * LIM);
+            if (word_cp == NULL)
+            {
+                warnx("malloc error");
+                free(line_cp);
+                return -2;
+            }
+            if (strlen(word) > LIM)
+            {
+                warnx("input truncated");
+            }
+            strcpy(word_cp, word);
+
+            /* consider only the last */
+            if (s)
+            {
+                free(*s);
+            }
+
             *s = word_cp;
             trim(s);
             where = count + 1;
-        }
-        else
-        {
-            free(word_cp);
         }
 
         found = 0;
