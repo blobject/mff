@@ -1,0 +1,38 @@
+* lambda
+
+=lambda.pl= is a rudimentary lambda-calculus interpreter written in Prolog.
+
+- Run ::
+  - Have =swi-prolog= installed.
+  - Either =swipl lambda.pl= to interact in a REPL-like fashion,
+  - Or =echo -E '\x.x' | swipl lambda.pl= to pipe in the input.
+
+- Calculus characterisation ::
+  - Untyped
+  - Greedy right-associative body (ie. =\x. x y z= means =\x. (x (y z))=)
+
+- Input syntax ::
+  - Term
+    - Either a variable, an application, or an abstraction.
+  - Variables ("=sym=")
+    - Denoted by any combination of printable ascii characters, except the special characters =[\.() ]=.
+  - Application ("=app=")
+    - Denoted by =term term=, ie. separation of two terms by space (ie. the ascii single-space character).
+    - Can be grouped using parentheses.
+  - Abstraction ("=fun=")
+    - Denoted by =\sym.term=.
+    - Only one variable allowed per abstraction. For example, =\x y.z= fails to parse.
+  - Whitespace
+    - Except for the delimitation of variables, whitespace is optional. For instance, =\ x . x ( y z )= is the same as =\x.x(y z)=.
+  - Parentheses
+    - Parentheses are optional. See /Calculus characterisation/ to see how the interpreter behaves implicitly.
+
+- Process ::
+  - The interpreter performs the following sequence of steps, where the result of each step is printed if it succeeds:
+    1. =token=: Input is read into a list of tokens.
+    1. =tree=: Parentheses are recognised to build a tree of tokens.
+    1. =data=: Other special characters are recognised to build a tree of compound data structures.
+    1. =deb=: The data structures are converted into a tree representing the de Bruijn index.
+    1. =reduce=: Beta-reductions are performed on the de Bruijn index representation.
+    1. =bed=: The inverse of =deb= is applied to the result of =reduce=, which yields a tree of compound data structures.
+    1. =atad=: The data structures are converted all the way back to a string that is in the canonical input syntax.
