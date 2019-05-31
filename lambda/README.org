@@ -27,12 +27,17 @@
   - Parentheses
     - Parentheses are optional. See /Calculus characterisation/ to see how the interpreter behaves implicitly.
 
+- de Bruijn indexing syntax ::
+  - Variable: integer, where bound variables start at =1=, and free variables are =0=.
+  - Application: =f()=
+  - Abstraction: =[]=
+
 - Process ::
   - The interpreter performs the following sequence of steps, where the result of each step is printed if it succeeds:
     1. =token=: Input is read into a list of tokens.
     1. =tree=: Parentheses are recognised to build a tree of tokens.
     1. =data=: Other special characters are recognised to build a tree of compound data structures.
     1. =deb=: The data structures are converted into a tree representing the de Bruijn index.
-    1. =reduce=: Beta-reductions are performed on the de Bruijn index representation.
-    1. =bed=: The inverse of =deb= is applied to the result of =reduce=, which yields a tree of compound data structures.
+    1. =redux=: Beta-reductions are performed on the de Bruijn index representation.
+    1. =bed=: The inverse of =deb= is applied to the result of =redux=, which yields a tree of compound data structures. The variables, however, resemble de Bruijn indices, so free variables are all =0=.
     1. =atad=: The data structures are converted all the way back to a string that is in the canonical input syntax.
