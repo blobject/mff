@@ -2,11 +2,11 @@
 
 ** About
 
-*Emergence* is a rudimentary visualiser/processor of a primordial particle system and its emergent/interactive properties.
+*Emergence* is a visualiser/processor of a primordial particle system and its emergent/interactive properties.
 
 Implementation is based on the article, /How a life-like system emerges from a simple particle motion law/, by  Schmickl, Stefanec, and Crailsheim: https://www.nature.com/articles/srep37969.
 
-There are two ways of using the program: graphically via the browser interface and headlessly via the commandline. The former allows the user to control various parameters and visually appreciate the effects, while the latter opens up possibilities for automation, and batch analysis.
+There are two ways of using the program: graphically via the browser interface and headlessly via the commandline. The former allows the user to control various parameters and visually appreciate the effects, while the latter opens up possibilities for automation and batch analysis.
 
 ** Try
 
@@ -16,14 +16,14 @@ There are two ways of using the program: graphically via the browser interface a
 
 Point your (javascript-and-html5-capable) browser to =emergence/index.html=
 
-- For example, let us say you cloned this repository in the Downloads folder. You would open a browser tab and visit =file:///home/user/Downloads/mff/emergence/index.html=.
+- For example, assuming that this repository was cloned into the Downloads folder, open a browser tab and visit =file:///home/user/Downloads/mff/emergence/index.html=.
 
 - Commandline interface ::
 
 1. Have nodejs installed, https://nodejs.org/.
 1. Download this repository.
 1. On the commandline, go to the =emergence/= directory within the downloaded repository.
-1. Run =node core.js ...=
+1. Try =node core.js -h=
 
 *** Remotely
 

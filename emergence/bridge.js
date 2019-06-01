@@ -49,7 +49,7 @@ const BRDG =
     VIEW.put_start();
   },
 
-  // Handle toggle (either pause or resume).
+  // Handle toggle (ie. either pause or resume).
   toggle: function ()
   {
     VIEW.toggle(WORLD.paused, CORE.tick, STATE.fps);
@@ -86,7 +86,7 @@ const BRDG =
   },
 
   // On every tick, register the state onto the history.
-  tally: function () // TODO: testing & bug-bashing required
+  tally: function ()
   {
     // SKETCH:
     //   Every k(=100) ticks, the buffer gets (lossily) squashed into
@@ -193,7 +193,6 @@ const BRDG =
       {
         c = 230;
       }
-      // Taken from https://github.com/nagualdesign/Primordial-Particle-System
       h[n] = UTIL.mod((n * 60 / density) + c, 360);
     }
 

@@ -377,7 +377,6 @@ const CORE =
   // Helper for `near`.
   // - Do the actual distance calculation between a-->b.
   // - Update particle properties (ie. N, L, R) accordingly.
-  // - Taken from https://github.com/nagualdesign/Primordial-Particle-System
   calculate: function (world, state, pts, ai, bi, mod)
   {
     // avoid redundant calculation between the same two pts.
@@ -393,7 +392,7 @@ const CORE =
     const dx = mod(b.x - a.x + w2, state.width) - w2;
     const dy = mod(b.y - a.y + h2, state.height) - h2;
 
-    // if distance is less than the radius
+    // If the fixed radius exceeds the distance
     if (world.radius_squared >= dx * dx + dy * dy)
     {
       a.n++;
@@ -419,13 +418,8 @@ const CORE =
     }
   },
 
-  //////////////////////////////////////////////////////////////////////
-  // The following are included in CORE so that headless execution /////
-  // would not have to pull in BRDG. ///////////////////////////////////
-  //////////////////////////////////////////////////////////////////////
-
-  // Given a (complete) state object in abbreviated form,
-  // set the global state.
+  // Given a (complete) state object in abbreviated form, set the global
+  // state.
   set: function (o)
   {
     const a = ABBREV;
@@ -562,8 +556,8 @@ const CORE =
   // encoding.
   encode: function (width, height, o)
   {
-    // ignore width and height when encode is called, ie. when not
-    // running headless.
+    // Ignore width and height when encode is called, ie. when not
+    // headless.
     let s = width.toString() + " " +
             height.toString() + " " +
             (o.t).toString() + " " +

@@ -16,7 +16,7 @@ function arg(args)
   // Help
   if (first === "-?" || first === "-h" || first === "--help")
   {
-    console.error("Usage:\n  node core.js [ -?/-h/--help | -f/--file FILE [STRING] | STRING ]\nParameters:\n  width height stop distribution fps num psize radius density alpha beta gamma\n  [index x y phi]");
+    console.error("Usage:\n  node core.js [ -?/-h/--help | -f/--file FILE [STRING] | STRING ]\nParameters:\n  wid hei stop distr fps num psize rad den alpha beta gamma\n  [index x y phi]");
     exit = true;
   }
 

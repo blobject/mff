@@ -134,7 +134,6 @@ const UTIL =
   },
 
   // A predefined neighborhood radius value, if not provided by user.
-  // - Taken from https://github.com/nagualdesign/Primordial-Particle-System
   auto_radius: function (width, height, density, num)
   {
     const r = Math.round(Math.sqrt(width * height * density /
