@@ -1,25 +1,32 @@
 * lambda
 
-=lambda.pl= is a rudimentary lambda-calculus interpreter written in Prolog.
+=lambda.pl= is an untyped lambda-calculus interpreter written in Prolog.
 
 - Run ::
-  - Have =swi-prolog= installed.
   - Either =swipl lambda.pl= to interact in a REPL-like fashion,
-  - Or =echo -E '\x.x' | swipl lambda.pl= to pipe in the input.
+  - Or =echo '\x.x' | swipl lambda.pl= to pipe in the input.
+
+- Test ::
+  - =sh test.sh=
+
+- Dependencies ::
+  - swi-prolog
+  - bash (only for test)
 
 - Calculus characterisation ::
   - Untyped
-  - Greedy right-associative body (ie. =\x. x y z= means =\x. (x (y z))=)
+  - Greedy left-associative body (ie. =\x. x y z= means =\x. ((x y) z)=)
+  - (?) Normal-order evaluation
 
 - Input syntax ::
   - Term
     - Either a variable, an application, or an abstraction.
-  - Variables ("=sym=")
-    - Denoted by any combination of printable ascii characters, except the special characters =[\.() ]=.
-  - Application ("=app=")
-    - Denoted by =term term=, ie. separation of two terms by space (ie. the ascii single-space character).
+  - Variable, "=sym="
+    - Denoted by any combination of printable ascii characters, except the special characters [ =\. ()= ].
+  - Application, "=app="
+    - Denoted by =term term= or =term)term=, etc., ie. separation of two terms by space (ie. the ascii single-space character) or a parenthesis.
     - Can be grouped using parentheses.
-  - Abstraction ("=fun=")
+  - Abstraction, "=fun="
     - Denoted by =\sym.term=.
     - Only one variable allowed per abstraction. For example, =\x y.z= fails to parse.
   - Whitespace
@@ -27,17 +34,11 @@
   - Parentheses
     - Parentheses are optional. See /Calculus characterisation/ to see how the interpreter behaves implicitly.
 
-- de Bruijn indexing syntax ::
-  - Variable: integer, where bound variables start at =1=, and free variables are =0=.
-  - Application: =f()=
-  - Abstraction: =[]=
-
 - Process ::
   - The interpreter performs the following sequence of steps, where the result of each step is printed if it succeeds:
     1. =token=: Input is read into a list of tokens.
     1. =tree=: Parentheses are recognised to build a tree of tokens.
-    1. =data=: Other special characters are recognised to build a tree of compound data structures.
-    1. =deb=: The data structures are converted into a tree representing the de Bruijn index.
-    1. =redux=: Beta-reductions are performed on the de Bruijn index representation.
-    1. =bed=: The inverse of =deb= is applied to the result of =redux=, which yields a tree of compound data structures. The variables, however, resemble de Bruijn indices, so free variables are all =0=.
-    1. =atad=: The data structures are converted all the way back to a string that is in the canonical input syntax.
+    1. =data=: Other special characters are recognised to build a compound data structure tree.
+    1. =reduce=: Renaming and substitutions are recursively performed on the data structure.
+    1. =atad=: The reduced data structure is converted all the way back to a string that is in the canonical input syntax.
+  - Reduction on divergent expressions may enter an infinite loop and cause the interpreter to hang.

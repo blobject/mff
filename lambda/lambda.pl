@@ -18,6 +18,10 @@ spacial(X) :- special(X); space(X); eol(X). % special incl. whitespace
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% helpers
 
+% Enumerate natural numbers.
+nat(0).
+nat(N) :- nat(X), N #= X +1.
+
 % Let M be the greater of A and B.
 max(A, B, M) :- A #>= B, M = A, !; M = B.
 
@@ -31,15 +35,15 @@ flatten([], []) :- !.
 flatten([E|L], R) :- !, flatten(E, X), flatten(L, Y), append(X, Y, R).
 flatten(L, [L]).
 
-% (unused) Is sym V free?
+% Is sym V free?
 free(V, V).
 free(V, app(T, U)) :- free(V, T); free(V, U).
 free(V, fun(W, T)) :- dif(V, W), free(V, T).
 
-% (unused) Get all free syms.
+% Get all free syms.
 frees(sym(V), [sym(V)]).
 frees(app(T, U), R) :- frees(T, X), frees(U, Y), union(X, Y, R).
-frees(fun(V, T), R) :- frees(T, X), select(V, X, R).
+frees(fun(V, T), R) :- frees(T, X), subtract(X, [V], R).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% read & tokenise
@@ -52,6 +56,7 @@ char(C) :- not(char_type(C, end_of_file)), char_code(C, A),
             A #>= 91, A #=< 126, dif(A, 92)).
 
 % Read (characters) into string S.
+%
 read_chars(C, C, [])    :- not(char(C)).
 read_chars(C, R, [C|S]) :- char(C), get_char(N), read_chars(N, R, S).
 
@@ -70,9 +75,9 @@ token(C, [V|S]) :- char(C), read_string(C, V, N), token(N, S).
 %%
 %% Sketch of process:
 %%
-%% input canon -> tree -> data -> deb -> reduce -.
-%%          ^                                    |
-%%          '------------ atad -> bed <----------'
+%% input canon -> tree -> data -> reduce --.
+%%          ^                              |
+%%          '------------ atad <-----------'
 
 %% tree %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -86,20 +91,30 @@ tree([P|L], [M|T], R)     :- lparen(P), rparen(Q),
 
 %% data & atad %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% Convert a parenthetic tree into a compound data structure.
-%   sym = variable    --.
-%   app = application --|-- term
-%   fun = abstraction --'
-data([T],   R)    :- is_list(T), data(T, R).
-data([S],   R)    :- not(is_list(S)), R = sym(S).
-data([A|B], R)    :- is_list(A), data(A, X), data(B, Y), R = app(X, Y).
-data([A|B], R)    :- not(is_list(A)), not(spacial(A)),
-                     data(B, X), R = app(sym(A), X).
-data([C,S,D|T],R) :- caret(C), dot(D), not(spacial(S)),
-                     data(T, X), R = fun(sym(S), X).
+%        .-- sym = variable
+% term --|-- app = application
+%        '-- fun = abstraction
+
+% Convert a parenthetic tree into a data structure. First iteration.
+data1([S],       [S])              :- not(is_list(S)).
+data1([S],       [R])              :- is_list(S), data1(S, R).
+data1([C,S,D|T], [fun(sym(S), X)]) :- caret(C), dot(D), not(spacial(S)),
+                                      data1(T, X), !.
+data1([S|T],     [X|Y])            :- (is_list(S), data1(S, X), !;
+                                      X = S), data1(T, Y).
+
+% Second iteration: parse all apps and syms.
+data(fun(S, T), fun(S, X)) :- data(T, X), !.
+data([S], R)       :- data(S, R), !.
+data(S, sym(S))    :- not(is_list(S)), not(spacial(S)).
+data(T, app(X, Y)) :- append(A, sym(S), T), data(A, X), Y = sym(S).
+data(T, app(X, Y)) :- append(A, fun(V, U), T), data(A, X),
+                      data(U, W), Y = fun(V, W).
+data(T, app(X, Y)) :- append(A, [B], T), data(A, X), data(B, Y).
 
 % Convert a compound data structure into a canonical string.
 % NOTE: The result is a list of characters, to be stringified by caller.
+%
 chars([], []).
 chars([A|R], [C|S]) :- char_code(C, A), chars(R, S).
 
@@ -109,85 +124,63 @@ atad(app(A, B), R) :- atad(A, X), atad(B, Y),
 atad(fun(S, T), R) :- atad(S, X), atad(T, Y),
                       flatten(['\\', X, '.', Y], R).
 
-%% deb & bed %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% Convert a compound data structure into a de Bruijn index tree.
-deb(D, R) :- deb(D, [], R).
-deb(sym(S),         V, R)      :- index(V, S, X), length(V, N),
-                                  (X #>= N, R = 0, !; R #= X + 1).
-deb(app(A, B),      V, [C, D]) :- deb(A, V, C), deb(B, V, D).
-deb(fun(sym(S), T), V, R)      :- deb(T, [S|V], X), R = f(X).
-
-% Convert a de Bruijn index tree into a compound data structure.
-bed(T, R) :- bed(T, _, R).
-bed(N,      0, sym(N)) :- integer(N).
-bed([N],    0, sym(N)) :- integer(N).
-bed([A, B], D, R)      :- bed(A, M, X), bed(B, N, Y),
-                          max(M, N, D), R = app(X, Y).
-bed(f(T),   D, R)      :- D #= E + 1, bed(T, E, X), R = fun(sym(D), X).
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% reduce (beta reduction on de Bruijn index trees)
+%% reduction
 
-% github.com/ptarau/play/blob/master/play.pro
+% Create new name N, from original O, for term T.
+% Done by appending a number after O such that N is not free in T.
+alias(T, O, N) :- nat(A), atom_concat(O, A, N), not(free(sym(N), T)), !.
 
-beta(f(A), T, R) :- sub(A, 1, T, R).
+% Substitute given old sym V with given new sym W.
+rename(sym(V),         V, W, sym(W)).
+rename(sym(S),         V, _, sym(S))         :- dif(S, V).
+rename(fun(sym(V), M), V, W, fun(sym(W), N)) :- rename(M, V, W, N).
+rename(fun(sym(S), M), V, W, fun(sym(S), N)) :- dif(S, V),
+                                                rename(M, V, W, N).
+rename(app(A, B),      V, W, app(X, Y))      :- rename(A, V, W, X),
+                                                rename(B, V, W, Y).
 
-sub([A, B], I, T, [X, Y]) :- I #>= 0, sub(A, I, T, X), sub(B, I, T, Y).
-sub(f(A),   I, T, f(R))   :- I #>= 0, J #= I + 1, sub(A, J, T, R).
-sub(N,      I, _, R)      :- integer(N), I #>= 0, N #> I, R #= N - 1.
-sub(N,      I, _, N)      :- integer(N), I #>= 0, N #< I.
-sub(N,      I, T, R)      :- integer(N), I #>= 0, N #= I,
-                             shift(I, 1, T, R).
+% Handle contractum. (alpha happens @ "sub(fun(sym..")
+sub(V,         V, N, N). % V is always sym(_)
+sub(sym(S),    V, _, sym(S))    :- dif(sym(S), V).
+sub(app(A, B), V, N, app(X, Y)) :- sub(A, V, N, X), sub(B, V, N, Y).
+% (\x.P)[x:=N] => \x.P
+sub(fun(V, M), V, _, fun(V, M)).
+% (\y.P)[x:=N] => \y.P[x:=N]       <= y NOT_IN frees(N)
+% (\y.P)[x:=N] => \z.P[y:=z][x:=N] <= y IN frees(N), z NOT_IN frees(NP)
+sub(fun(sym(S), M), sym(V), N, fun(sym(X), Y)) :-
+  dif(S, V), (free(sym(S), N), alias(M, S, X), alias(N, S, X),
+  rename(M, S, X, P), !; P = M, X = S), sub(P, sym(V), N, Y).
 
-shift(I, K, [A, B], [X, Y]) :- K #>= 0, I #>= 0,
-                               shift(I, K, A, X), shift(I, K, B, Y).
-shift(I, K, f(A),   f(R))   :- K #>= 0, I #>= 0, J #= K + 1,
-                               shift(I, J, A, R).
-shift(I, K, N,      M)      :- integer(N), K #>= 0, I #>= 0, N #>= K,
-                               M #= N + I.
-shift(I, K, N,      N)      :- integer(N), K #>= 0, I #>= 0, N #< K.
+% Find redex and call sub on it. (beta happens @ "reduce(app(fun..")
+red(sym(A),    sym(A)).
+red(fun(V, M), fun(V, N)) :- red(M, N).
+red(app(fun(V, M), N), R) :- sub(M, V, N, P), red(P, R), !.
+red(app(M, N), app(X, Y)) :- red(M, X), reduce(N, Y).
 
-redux1(N,      N) :- integer(N).
-redux1(f(T),   f(T)).
-redux1([A, B], R) :- redux1(A, X), reduce1(X, B, R).
-
-reduce1(N,      X, [N, X]) :- integer(N).
-reduce1(f(T),   X, R)      :- beta(f(T), X, A), redux1(A, R).
-reduce1([A, B], X, [[A, B], X]).
-
-redux(N,      N)    :- integer(N).
-redux(f(T),   f(U)) :- redux(T, U).
-redux([A, B], R)    :- redux1(A, X), reduce(X, B, R).
-
-reduce(N,      X, [N, Y]) :- integer(N), redux(X, Y).
-reduce(f(T),   X, R)      :- beta(f(T), X, A), redux(A, R).
-reduce([A, B], X, [C, D]) :- redux([A, B], C), redux(X, D).
+% Wrapper for the red, sub, rename family of functions.
+% NOTE: May unnecessarily perform one additional reduction.
+reduce(T, R) :- red(T, P), red(P, Q),
+                (dif(P, Q), reduce(Q, R), !; R = Q).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% run
 
 loop :-
   % Build token list.
-  token(L), write('toks: '), write(L), nl,
+  token(L), nl, write('toks: '), write(L), nl,
 
   % Convert to parenthetic tree.
-  tree(L, M), write('tree: '), write(M), nl,
+  tree(L, T), write('tree: '), write(T), nl,
 
   % Convert to compound data structure.
-  data(M, T), write('data: '), write(T), nl,
+  data1(T, C), data(C, D), write('data: '), write(D), nl,
 
-  % Convert to de Bruijn index tree.
-  deb(T, B), write('d->B: '), write(B), nl,
-
-  % Beta-reduce.
-  redux(B, R), write('red.: '), write(R), nl,
-
-  % Convert back to compound data structure.
-  bed(R, D), write('B->d: '), write(D), nl,
+  % Reduce.
+  reduce(D, B), write('redu: '), write(B), nl,
 
   % Convert back to canonical syntax.
-  atad(D, S), string_chars(O, S), write('RESULT: '), write(O), nl,
+  atad(B, S), string_chars(R, S), write('result: '), write(R), nl,
 
   loop.
 
@@ -196,14 +189,16 @@ preamble :-
   write('| Welcome to a lambda-calculus interpreter! |'), nl,
   write('|                                           |'), nl,
   write('| INPUT examples:                           |'), nl,
-  write('| - x; x y; (x y) z; \\x.x y; \\a (\\b.b c) d  |'), nl,
+  write('| - x; x y; x (y z); \\x.x y; \\a (\\b.b c) d  |'), nl,
   write('| OUTPUT:                                   |'), nl,
-  write('| - tok(ens); (parse) tree; (compound) data;|'), nl,
-  write('|   de Bruijn indexing; reductions;         |'), nl,
-  write('| - Absence of any output means failure.    |'), nl,
+  write('| - [tok]ens; parse [tree]; compound [data];|'), nl,
+  write('|   alpha/beta [redu]ction; conversion back |'), nl,
+  write('|   to input syntax.                        |'), nl,
+  write('| - Absent output step means failure.       |'), nl,
   write('| START:                                    |'), nl,
   write('| - `swipl lambda.pl` OR                    |'), nl,
-  write('| - `echo \'x.x\' | swipl lambda.pl`          |'), nl,
+  write("| - `echo 'INPUT' | swipl lambda.pl` OR     |"), nl,
+  write('| - `sh test.sh`                            |'), nl,
   write('| QUIT:                                     |'), nl,
   write('| - C-d on empty OR double C-c              |'), nl,
   write("'-------------------------------------------'"), nl.
