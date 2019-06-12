@@ -22,22 +22,17 @@ spacial(X) :- special(X); space(X); eol(X). % special incl. whitespace
 nat(0).
 nat(N) :- nat(X), N #= X + 1.
 
-% Get 1-indexed position of element in a list, 0 if absent.
-index([], _, 0).
-index([E|_], E, 0) :- !.
-index([X|L], E, N) :- dif(X, E), index(L, E, N1), N #= N1 + 1.
-
 % Flatten list of lists.
-flatten([], []) :- !.
+flatten([],    []) :- !.
 flatten([E|L], R) :- !, flatten(E, X), flatten(L, Y), append(X, Y, R).
-flatten(L, [L]).
+flatten(L,     [L]).
 
 % Is sym V free?
 free(V, V).
 free(V, app(T, U)) :- free(V, T); free(V, U).
 free(V, fun(W, T)) :- dif(V, W), free(V, T).
 
-% Get all free syms.
+% (Unused) Get all free syms.
 frees(sym(V), [sym(V)]).
 frees(app(T, U), R) :- frees(T, X), frees(U, Y), union(X, Y, R).
 frees(fun(V, T), R) :- frees(T, X), subtract(X, [V], R).
@@ -83,7 +78,7 @@ token(C, [V|S]) :- char(C), read_string(C, V, N), token(N, S).
 %% tree %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Parse a list of tokens into a parenthetic tree.
-tree(L, T) :- tree(L, T, []).
+tree(L, T)                :- tree(L, T, []).
 tree([],    [],    []).
 tree([P|L], [P|T], R)     :- not(paren(P)), tree(L, T, R).
 tree([P|L], [],    [P|L]) :- rparen(P).
@@ -123,7 +118,7 @@ data(T, app(X, Y)) :- append(A, [B], T), data(A, X), data(B, Y).
 % Convert a compound data structure into a canonical string.
 % NOTE: The result is a list of characters, to be stringified by caller.
 %
-chars([], []).
+chars([],    []).
 chars([A|R], [C|S]) :- char_code(C, A), chars(R, S).
 
 atad(sym(S),    R) :- atom_codes(S, A), chars(A, R).
@@ -160,14 +155,24 @@ sub(fun(sym(S), M), sym(V), N, fun(sym(X), Y)) :-
   dif(S, V), (free(sym(S), N), alias(M, S, X), alias(N, S, X),
   rename(M, S, X, P), !; P = M, X = S), sub(P, sym(V), N, Y).
 
+% Redex exists.
+redexists(sym(_)) :- fail.
+redexists(fun(_, T)) :- redexists(T).
+redexists(app(fun(_, _), _)) :- !. % the redex
+redexists(app(A, B)) :- redexists(A); redexists(B).
+
 % Find redex and call sub on it. (beta happens @ "reduce(app(fun..")
 red(sym(A),    sym(A)).
 red(fun(V, M), fun(V, N)) :- red(M, N).
 red(app(fun(V, M), N), R) :- sub(M, V, N, R), !.
-red(app(A, B), app(X, B)) :- red(A, X).
+red(app(A, B), app(X, Y)) :- (redexists(A), red(A, X), Y = B, !;
+                             redexists(B), red(B, Y), X = A, !;
+                             X = A, Y = B).
 
 % Wrapper for the red, sub, rename family of functions.
-reduce(T, R) :- red(T, P), red(P, Q), (dif(P, Q), reduce(Q, R), !; R = Q).
+% NOTE: May unnecessarily perform additional reductions.
+reduce(T, R) :- red(T, P), red(P, Q),
+                (dif(P, Q), reduce(Q, R), !; R = Q).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% run

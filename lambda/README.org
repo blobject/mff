@@ -4,7 +4,7 @@
 
 - Run ::
   - Either =swipl lambda.pl= to interact in a REPL-like fashion,
-  - Or =echo '\x.x' | swipl lambda.pl= to pipe in the input.
+  - Or =echo '\x.x' | swipl lambda.pl= to interpret the piped input.
 
 - Test ::
   - =sh test.sh=

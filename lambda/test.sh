@@ -25,30 +25,36 @@ t()
   fi
 }
 
+test_tree()
+{
+  echo '---- phase: string -> tree ----'
+  t tree 'xx' '\[xx\]'
+  t tree 'a    b' '\[a,b\]'
+  t tree '(' ''
+  t tree ')' ''
+}
+
 test_data()
 {
-  echo '---- phase: parse into data ----'
+  echo '---- phase: string-> tree -> data ----'
+  t data '()' ''
+  t data ')(' ''
+  t data '\\' ''
+  t data '\\x' ''
+  t data '\\x.' ''
   t data 'x' 'sym(x)'
+  t data '(((x)))' 'sym(x)'
+  t data '((x))((y))' 'app(sym(x),sym(y))'
   t data 'x y' 'app(sym(x),sym(y))'
-  t data '(x y) (a b)' 'app(app(sym(x),sym(y)),app(sym(a),sym(b)))'
+  t data '(x)(y)' 'app(sym(x),sym(y))'
+  t data '(x)(y)(z)' 'app(app(sym(x),sym(y)),sym(z))'
+  t data '(x y)(a b)(u v)' 'app(app(app(sym(x),sym(y)),app(sym(a),sym(b))),app(sym(u),sym(v)))'
   t data '(\x.x)(\y.y)(\z.z)' 'app(app(fun(sym(x),sym(x)),fun(sym(y),sym(y))),fun(sym(z),sym(z)))'
   t data '\\x.x' 'fun(sym(x),sym(x))'
   t data '\\x.a b c' 'fun(sym(x),app(app(sym(a),sym(b)),sym(c)))'
   t data '\\x.a (b c)' 'fun(sym(x),app(sym(a),app(sym(b),sym(c))))'
   t data '\\y.(\\x.x)y z' 'fun(sym(y),app(app(fun(sym(x),sym(x)),sym(y)),sym(z)))'
   t data '\\x.a\\b.c(z y)' 'fun(sym(x),app(sym(a),fun(sym(b),app(sym(c),app(sym(z),sym(y))))))'
-  t data '(((x)))' 'sym(x)'
-  t data '((x))((y))' 'app(sym(x),sym(y))'
-  t data 'xx' 'sym(xx)'
-  t data 'a    b' 'app(sym(a),sym(b))'
-  t data '(a)(b)' 'app(sym(a),sym(b))'
-  t data '(' ''
-  t data ')' ''
-  t data '()' ''
-  t data ')(' ''
-  t data '\\' ''
-  t data '\\x' ''
-  t data '\\x.' ''
 }
 
 test_redu()
@@ -109,6 +115,7 @@ test_more()
 }
 
 echo 'starting tests'
+test_tree
 test_data
 test_redu
 test_rere
