@@ -20,10 +20,7 @@ spacial(X) :- special(X); space(X); eol(X). % special incl. whitespace
 
 % Enumerate natural numbers.
 nat(0).
-nat(N) :- nat(X), N #= X +1.
-
-% Let M be the greater of A and B.
-max(A, B, M) :- A #>= B, M = A, !; M = B.
+nat(N) :- nat(X), N #= X + 1.
 
 % Get 1-indexed position of element in a list, 0 if absent.
 index([], _, 0).
@@ -49,11 +46,15 @@ frees(fun(V, T), R) :- frees(T, X), subtract(X, [V], R).
 %% read & tokenise
 
 % Is character an ascii grapheme?
+% Excluded:
+%   0..31  = control (incl. nl) --.
+%   32     = space                |
+%   40..41 = parens               |-- "spacial"
+%   46     = dot                  |
+%   92     = caret              --'
+%   127    = del
 char(C) :- not(char_type(C, end_of_file)), char_code(C, A),
-           (A #>= 65, A #=< 90;
-            A #>= 33, A #=< 64,
-            dif(A, 40), dif(A, 41), dif(A, 46);
-            A #>= 91, A #=< 126, dif(A, 92)).
+           (A in 33..39; A in 42..45; A in 47..91; A in 93..126).
 
 % Read (characters) into string S.
 %
@@ -97,10 +98,10 @@ tree([P|L], [M|T], R)     :- lparen(P), rparen(Q),
 %
 % Parsing into a compound data structure is done in two steps in order
 % to achieve left-associative application.
-% - The first step (dat) ensures that the "\x." form is properly
+% - The first step (dat) ensures that the "\ x . _" forms are properly
 %   recognised as funs.
 % - The second step (data) parses out the apps left-associatively via
-%   append. And all syms are settled in this step.
+%   append. All syms are also settled in this step.
 
 % Convert a parenthetic tree into a data structure. First iteration.
 dat([S],       [S])              :- not(is_list(S)).
@@ -162,13 +163,11 @@ sub(fun(sym(S), M), sym(V), N, fun(sym(X), Y)) :-
 % Find redex and call sub on it. (beta happens @ "reduce(app(fun..")
 red(sym(A),    sym(A)).
 red(fun(V, M), fun(V, N)) :- red(M, N).
-red(app(fun(V, M), N), R) :- sub(M, V, N, P), red(P, R), !.
-red(app(M, N), app(X, Y)) :- red(M, X), reduce(N, Y).
+red(app(fun(V, M), N), R) :- sub(M, V, N, R), !.
+red(app(A, B), app(X, B)) :- red(A, X).
 
 % Wrapper for the red, sub, rename family of functions.
-% NOTE: May unnecessarily perform one additional reduction.
-reduce(T, R) :- red(T, P), red(P, Q),
-                (dif(P, Q), reduce(Q, R), !; R = Q).
+reduce(T, R) :- red(T, P), red(P, Q), (dif(P, Q), reduce(Q, R), !; R = Q).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% run

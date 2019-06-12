@@ -31,6 +31,7 @@ test_data()
   t data 'x' 'sym(x)'
   t data 'x y' 'app(sym(x),sym(y))'
   t data '(x y) (a b)' 'app(app(sym(x),sym(y)),app(sym(a),sym(b)))'
+  t data '(\x.x)(\y.y)(\z.z)' 'app(app(fun(sym(x),sym(x)),fun(sym(y),sym(y))),fun(sym(z),sym(z)))'
   t data '\\x.x' 'fun(sym(x),sym(x))'
   t data '\\x.a b c' 'fun(sym(x),app(app(sym(a),sym(b)),sym(c)))'
   t data '\\x.a (b c)' 'fun(sym(x),app(sym(a),app(sym(b),sym(c))))'
@@ -68,6 +69,7 @@ test_rere()
   t redu '(\\x.\\y.x x)(\\x.y)' 'fun(sym(y0),sym(y))'
   t redu '(\\x.\\y.\\z.x y z)(\\x.x x)(\\x.x)x' 'sym(x)'
   t redu '(\\x.((\\y.(+ 2 y))(- x y)))z' 'app(app(sym(+),sym(2)),app(app(sym(-),sym(z)),sym(y)))'
+  t redu '((\x.x)(\y.y))((\z.z)(\w.w))' 'fun(sym(w),sym(w))'
 }
 
 test_result()

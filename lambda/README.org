@@ -16,7 +16,7 @@
 - Calculus characterisation ::
   - Untyped
   - Greedy left-associative body (ie. =\x. x y z= means =\x. ((x y) z)=)
-  - (?) Normal-order evaluation
+  - Normal-order evaluation
 
 - Input syntax ::
   - Term
