@@ -94,14 +94,21 @@ tree([P|L], [M|T], R)     :- lparen(P), rparen(Q),
 %        .-- sym = variable
 % term --|-- app = application
 %        '-- fun = abstraction
+%
+% Parsing into a compound data structure is done in two steps in order
+% to achieve left-associative application.
+% - The first step (dat) ensures that the "\x." form is properly
+%   recognised as funs.
+% - The second step (data) parses out the apps left-associatively via
+%   append. And all syms are settled in this step.
 
 % Convert a parenthetic tree into a data structure. First iteration.
-data1([S],       [S])              :- not(is_list(S)).
-data1([S],       [R])              :- is_list(S), data1(S, R).
-data1([C,S,D|T], [fun(sym(S), X)]) :- caret(C), dot(D), not(spacial(S)),
-                                      data1(T, X), !.
-data1([S|T],     [X|Y])            :- (is_list(S), data1(S, X), !;
-                                      X = S), data1(T, Y).
+dat([S],       [S])              :- not(is_list(S)).
+dat([S],       [R])              :- is_list(S), dat(S, R).
+dat([C,S,D|T], [fun(sym(S), X)]) :- caret(C), dot(D), not(spacial(S)),
+                                    dat(T, X), !.
+dat([S|T],     [X|Y])            :- (is_list(S), dat(S, X), !;
+                                    X = S), dat(T, Y).
 
 % Second iteration: parse all apps and syms.
 data(fun(S, T), fun(S, X)) :- data(T, X), !.
@@ -174,7 +181,7 @@ loop :-
   tree(L, T), write('tree: '), write(T), nl,
 
   % Convert to compound data structure.
-  data1(T, C), data(C, D), write('data: '), write(D), nl,
+  dat(T, C), data(C, D), write('data: '), write(D), nl,
 
   % Reduce.
   reduce(D, B), write('redu: '), write(B), nl,
