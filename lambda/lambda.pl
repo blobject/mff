@@ -1,5 +1,6 @@
 % file: lambda/lambda.pl
-% for: nprg005
+% by  : jooh@cuni.cz
+% for : nprg005
 
 :- use_module(library(clpfd)).
 :- set_prolog_flag(verbose, silent).
@@ -46,7 +47,7 @@ frees(fun(V, T), R) :- frees(T, X), subtract(X, [V], R).
 %   32     = space                |
 %   40..41 = parens               |-- "spacial"
 %   46     = dot                  |
-%   92     = caret              --'
+%   92     = backslash          --'
 %   127    = del
 char(C) :- not(char_type(C, end_of_file)), char_code(C, A),
            (A in 33..39; A in 42..45; A in 47..91; A in 93..126).
@@ -71,9 +72,9 @@ token(C, [V|S]) :- char(C), read_string(C, V, N), token(N, S).
 %%
 %% Sketch of process:
 %%
-%% input canon -> tree -> data -> reduce --.
-%%          ^                              |
-%%          '------------ atad <-----------'
+%% input canon -> tree -> data -> reduced data --.
+%%          ^                                    |
+%%          '------------ atad <-----------------'
 
 %% tree %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -94,7 +95,7 @@ tree([P|L], [M|T], R)     :- lparen(P), rparen(Q),
 % Parsing into a compound data structure is done in two steps in order
 % to achieve left-associative application.
 % - The first step (dat) ensures that the "\ x . _" forms are properly
-%   recognised as funs.
+%   recognised as funs before parsing everything else.
 % - The second step (data) parses out the apps left-associatively via
 %   append. All syms are also settled in this step.
 
@@ -156,10 +157,10 @@ sub(fun(sym(S), M), sym(V), N, fun(sym(X), Y)) :-
   rename(M, S, X, P), !; P = M, X = S), sub(P, sym(V), N, Y).
 
 % Redex exists.
-redexists(sym(_)) :- fail.
-redexists(fun(_, T)) :- redexists(T).
+redexists(sym(_))            :- fail.
+redexists(fun(_, T))         :- redexists(T).
 redexists(app(fun(_, _), _)) :- !. % the redex
-redexists(app(A, B)) :- redexists(A); redexists(B).
+redexists(app(A, B))         :- redexists(A); redexists(B).
 
 % Find redex and call sub on it. (beta happens @ "reduce(app(fun..")
 red(sym(A),    sym(A)).
@@ -169,8 +170,9 @@ red(app(A, B), app(X, Y)) :- (redexists(A), red(A, X), Y = B, !;
                              redexists(B), red(B, Y), X = A, !;
                              X = A, Y = B).
 
-% Wrapper for the red, sub, rename family of functions.
-% NOTE: May unnecessarily perform additional reductions.
+% Wrapper around the red, sub, rename family of functions.
+% NOTE: The double reduction may be redundant in some cases, but can
+%       also help break out of certain divergent reductions.
 reduce(T, R) :- red(T, P), red(P, Q),
                 (dif(P, Q), reduce(Q, R), !; R = Q).
 

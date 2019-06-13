@@ -1,33 +1,37 @@
 #! /bin/sh
 
+# file: lambda/test.sh
+# by  : jooh@cuni.cz
+# for : nprg005
+
 PROLOG='swipl'
 SCRIPT='./lambda.pl'
 
 t()
 {
   step="$1"
-  inp="$2"
-  exp="$3"
-  got=$(echo "$inp" \
+  input="$2"
+  expect="$3"
+  got=$(echo "$input" \
     | $PROLOG $SCRIPT 2>/dev/null \
     | grep "^$step: " \
     | cut -d ' ' -f 2- \
     | sed 's/\\/\\\\/g') # for proper grep and echo
-  if echo "$got" | grep -q "^$exp$"; then
-    echo -n "GOOD: $inp\t--> "
+  if echo "$got" | grep -q "^$expect$"; then
+    echo -n "GOOD: $input\t--> "
     if [ -z "$got" ]; then
       echo 'failed as expected'
     else
       echo "$got"
     fi
   else
-    echo "BAD!! $inp\n  EXP: $exp\n  GOT: $got"
+    echo "BAD!! $input\n  EXP: $expect\n  GOT: $got"
   fi
 }
 
 test_tree()
 {
-  echo '---- phase: string -> tree ----'
+  echo '---- phase: string-to-tree ----'
   t tree 'xx' '\[xx\]'
   t tree 'a    b' '\[a,b\]'
   t tree '(' ''
@@ -36,13 +40,9 @@ test_tree()
 
 test_data()
 {
-  echo '---- phase: string-> tree -> data ----'
-  t data '()' ''
-  t data ')(' ''
-  t data '\\' ''
-  t data '\\x' ''
-  t data '\\x.' ''
+  echo '---- phase: string-to-tree-to-data ----'
   t data 'x' 'sym(x)'
+  t data '_A"str@nge123/var' 'sym(_A"str@nge123/var)'
   t data '(((x)))' 'sym(x)'
   t data '((x))((y))' 'app(sym(x),sym(y))'
   t data 'x y' 'app(sym(x),sym(y))'
@@ -55,6 +55,20 @@ test_data()
   t data '\\x.a (b c)' 'fun(sym(x),app(sym(a),app(sym(b),sym(c))))'
   t data '\\y.(\\x.x)y z' 'fun(sym(y),app(app(fun(sym(x),sym(x)),sym(y)),sym(z)))'
   t data '\\x.a\\b.c(z y)' 'fun(sym(x),app(sym(a),fun(sym(b),app(sym(c),app(sym(z),sym(y))))))'
+}
+
+test_fail()
+{
+  echo '---- phase: to-data fail ----'
+  t data '()' ''
+  t data ')(' ''
+  t data '\\' ''
+  t data '\\x' ''
+  t data '\\x.' ''
+  t data '\(.)' ''
+  t data '\x(.)y' ''
+  t data '(\x.)y' ''
+  #t data '\(x).y' '' # TODO: this should fail
 }
 
 test_redu()
@@ -87,17 +101,19 @@ test_result()
 
 test_more()
 {
-  # BEWARE: Equality checking is paren-syntax-sensitive! Checking "redu"
-  #         would be less ambiguous (but also less legible).
+  # BEWARE: Equality checking is paren-sensitive! Checking "redu" would
+  #         be less ambiguous, but also less legible.
 
   # numerals
   plus='\\m.\\n.\\f.\\x.((m f)((n f) x))'
   mult='\\m.\\n.\\f.\\x.(m (n f) x)'
-  exp='\\m.\\n.(n m)' # does not work :-(
+  exp='\\m.\\n.(n m)'
   one='\\f.\\x.(f x)'
   two='\\f.\\x.(f (f x))'
   three='\\f.\\x.(f (f (f x)))'
   four='\\f.\\x.(f (f (f (f x))))'
+  one_alias='\\x.\\x0.(x x0)'
+  four_alias='\\x.\\x0.(x (x (x (x x0))))'
 
   # combinators
   I='\\x.x'
@@ -108,8 +124,10 @@ test_more()
 
   echo '---- more ----'
   echo '"+ 2 2" = 4'; t result "($plus)($two)($two)" "$four"
-  echo '"* 1 2" = 2'; t result "($mult)($one)($two)" "$two"
   echo '"+ (+ 1 1) 1" = 3'; t result "($plus)(($plus)($one)($one))($one)" "$three"
+  echo '"* 1 2" = 2'; t result "($mult)($one)($two)" "$two"
+  echo '"^ 2 2" = 4'; t result "($exp)($two)($two)" "$four_alias"
+  echo '"^ 1 3" = 1'; t result "($exp)($one)($three)" "$one_alias"
   echo '"S K K x" = x'; t result "($S)($K)($K)x" 'x'
   echo '"C I x y" = y x'; t result "($C)($I)x y" '(y x)'
 }
@@ -117,6 +135,7 @@ test_more()
 echo 'starting tests'
 test_tree
 test_data
+test_fail
 test_redu
 test_rere
 test_result

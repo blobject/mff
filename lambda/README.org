@@ -15,8 +15,9 @@
 
 - Calculus characterisation ::
   - Untyped
-  - Greedy left-associative body (ie. =\x. x y z= means =\x. ((x y) z)=)
-  - Normal-order evaluation
+  - Evaluation is normal-order
+  - Body is greedy left-associative
+    - eg. =\x. x y z \a. b= means =\x. (((x y) z) (\a. b))=
 
 - Input syntax ::
   - Term
@@ -24,8 +25,7 @@
   - Variable, "=sym="
     - Denoted by any combination of printable ascii characters, except the special characters [ =\. ()= ].
   - Application, "=app="
-    - Denoted by =term term= or =term)term=, etc., ie. separation of two terms by space (ie. the ascii single-space character) or a parenthesis.
-    - Can be grouped using parentheses.
+    - Denoted by =term term= or =(terms)term=, etc., ie. separation of two terms by space (ie. the ascii single-space character) or parentheses.
   - Abstraction, "=fun="
     - Denoted by =\sym.term=.
     - Only one variable allowed per abstraction. For example, =\x y.z= fails to parse.
