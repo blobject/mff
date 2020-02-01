@@ -4,6 +4,10 @@
   - *[[npp][npp]]*
   - *[[lambda][lambda]]*
 
+- nprg035 (c#) ::
+  - *[[chesss][chesss]]*
+  - *[[_exam_nprg035][exam]]* (2020 jan 27)
+
 - nprg041 (c++) ::
   - *[[array][array]]*
   - *[[ssharp][ssharp]]*: [[https://github.com/agarick/mff/tree/nprg041_ssharp_submit/ssharp][submit]]

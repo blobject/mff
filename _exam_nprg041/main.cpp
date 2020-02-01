@@ -1,4 +1,4 @@
-// file: exam190205/main.cpp
+// file: _exam_nprg041/main.cpp
 // by  : jooh@cuni.cz
 // for : nprg041 exam
 

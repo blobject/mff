@@ -1,7 +1,5 @@
-// file: exam190201/main.c
+// file: _exam_nswi015/main.c
 // by  : jooh@cuni.cz
-// for : nswi015
-// lic.: mit
 
 #include <assert.h>
 #include <ctype.h>
