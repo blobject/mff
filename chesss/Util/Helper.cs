@@ -6,36 +6,74 @@ namespace Chesss.Util
 {
   public class Helper
   {
+    public static List<string>
+    Known = new List<string>() { "p", "r", "n", "b", "q", "k" };
+
+    public static char
+    ToFileChar(int file)
+    {
+      return (char) (file + 'a' - 1);
+    }
+
+    public static int
+    ToFileNum(char file)
+    {
+      return (int) file - 'a' + 1;
+    }
+
+    public static Place
+    ToPlace(string place)
+    {
+      return new Place(ToFileNum(place[0]),
+                       (int) char.GetNumericValue(place[1]));
+    }
+
+    public static bool
+    IsPieceSym(string sym)
+    {
+      return Known.Contains(sym);
+    }
+
+    public static bool
+    IsPlace(string place)
+    {
+      if (place.Length != 2)
+      {
+        return false;
+      }
+      int file = ToFileNum(place[0]);
+      int rank = (int) char.GetNumericValue(place[1]);
+      if (file < 1 || file > 8 || rank < 1 || rank > 8)
+      {
+        return false;
+      }
+      return true;
+    }
+
     // for testing
     public static int
     ParsePieces(string ps, out List<Piece> pieces)
     {
       pieces = new List<Piece>();
       char c; C color;
-      char p; P sym;
-      char f; int file;
-      char r; int rank;
+      string sym;
+      char f;
+      char r;
 
       foreach (var piece in ps.Split())
       {
         c = piece[0];
-        p = piece[1];
-        r = piece[2];
-        f = piece[3];
+        sym = piece[1].ToString();
+        f = piece[2];
+        r = piece[3];
         if      (c == 'b') { color = C.Black; }
         else if (c == 'w') { color = C.White; }
         else { return 1; }
-        if      (p == 'p') { sym = P.Pawn; }
-        else if (p == 'r') { sym = P.Rook; }
-        else if (p == 'n') { sym = P.Knight; }
-        else if (p == 'b') { sym = P.Bishop; }
-        else if (p == 'q') { sym = P.Queen; }
-        else if (p == 'k') { sym = P.Knight; }
-        else { return 1; }
-        file = r - 'a' + 1;
-        rank = (int) char.GetNumericValue(f);
-        if (file < 1 || file > 8 || rank < 1 || rank > 8) { return 1; }
-        pieces.Add(new Piece(sym, color, new Place(file, rank)));
+        if (!Known.Contains(sym)) { return 1; }
+        if (!IsPlace($"{f}{r}")) { return 1; }
+        pieces.Add(PieceGen.Gen(sym, color,
+                                new Place(ToFileNum(f),
+                                          (int) char.GetNumericValue(r))));
       }
 
       return 0;

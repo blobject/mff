@@ -5,13 +5,13 @@ namespace Chesss.Model
 {
   public class Place : IEquatable<Place>
   {
-    private int file;
-    private int rank;
+    public int File { get; set; }
+    public int Rank { get; set; }
 
     public Place(int file, int rank)
     {
-      this.file = file;
-      this.rank = rank;
+      this.File = file;
+      this.Rank = rank;
     }
 
     public override bool Equals(object o)
@@ -29,7 +29,7 @@ namespace Chesss.Model
       {
         return true;
       }
-      return this.file == place.File() && this.rank == place.Rank();
+      return this.File == place.File && this.Rank == place.Rank;
     }
 
     public override int GetHashCode()
@@ -37,8 +37,8 @@ namespace Chesss.Model
       unchecked
       {
         int hash = 17;
-        hash = hash * 23 + this.file.GetHashCode();
-        hash = hash * 23 + this.rank.GetHashCode();
+        hash = hash * 23 + this.File.GetHashCode();
+        hash = hash * 23 + this.Rank.GetHashCode();
         return hash;
       }
     }
@@ -46,37 +46,25 @@ namespace Chesss.Model
     public override string
     ToString()
     {
-      return string.Format("{0}{1}", (char) (this.file + 'a' - 1), this.rank);
-    }
-
-    public int
-    File()
-    {
-      return this.file;
-    }
-
-    public int
-    Rank()
-    {
-      return this.rank;
+      return string.Format("{0}{1}", (char) (this.File + 'a' - 1), this.Rank);
     }
 
     public Place
     N()
     {
-      int rank = this.rank + 1;
+      int rank = this.Rank + 1;
       if (rank > 8)
       {
         return null;
       }
-      return new Place(this.file, rank);
+      return new Place(this.File, rank);
     }
 
     public Place
     NE()
     {
-      int file = this.file + 1;
-      int rank = this.rank + 1;
+      int file = this.File + 1;
+      int rank = this.Rank + 1;
       if (file > 8 || rank > 8)
       {
         return null;
@@ -87,19 +75,19 @@ namespace Chesss.Model
     public Place
     E()
     {
-      int file = this.file + 1;
+      int file = this.File + 1;
       if (file > 8)
       {
         return null;
       }
-      return new Place(file, this.rank);
+      return new Place(file, this.Rank);
     }
 
     public Place
     SE()
     {
-      int file = this.file + 1;
-      int rank = this.rank - 1;
+      int file = this.File + 1;
+      int rank = this.Rank - 1;
       if (file > 8 || rank < 1)
       {
         return null;
@@ -110,19 +98,19 @@ namespace Chesss.Model
     public Place
     S()
     {
-      int rank = this.rank - 1;
+      int rank = this.Rank - 1;
       if (rank < 1)
       {
         return null;
       }
-      return new Place(this.file, rank);
+      return new Place(this.File, rank);
     }
 
     public Place
     SW()
     {
-      int file = this.file - 1;
-      int rank = this.rank - 1;
+      int file = this.File - 1;
+      int rank = this.Rank - 1;
       if (file < 1 || rank < 1)
       {
         return null;
@@ -133,19 +121,19 @@ namespace Chesss.Model
     public Place
     W()
     {
-      int file = this.file - 1;
+      int file = this.File - 1;
       if (file < 1)
       {
         return null;
       }
-      return new Place(file, this.rank);
+      return new Place(file, this.Rank);
     }
 
     public Place
     NW()
     {
-      int file = this.file - 1;
-      int rank = this.rank + 1;
+      int file = this.File - 1;
+      int rank = this.Rank + 1;
       if (file < 1 || rank > 8)
       {
         return null;

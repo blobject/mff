@@ -1,4 +1,4 @@
-* mff uk
+* mff
 
 - nprg005 (non-procedural) ::
   - *[[npp][npp]]*

@@ -7,28 +7,31 @@ namespace Chesss.Model
   public class Board
   {
     private List<List<Piece>> squares;
+    public static int Width { get; set; }
+    public static int Height { get; set; }
 
     public Board()
     {
+      Width = 8;
+      Height = 8;
       this.squares = new List<List<Piece>>();
-      P sym = P.Rook;
-
+      string sym = "p";
       for (var file = 1; file <= 8; file++)
       {
-        if      (file == 1 || file == 8) { sym = P.Rook; }
-        else if (file == 2 || file == 7) { sym = P.Knight; }
-        else if (file == 3 || file == 6) { sym = P.Bishop; }
-        else if (file == 4)              { sym = P.Queen; }
-        else if (file == 5)              { sym = P.King; }
+        if      (file == 1 || file == 8) { sym = "r"; }
+        else if (file == 2 || file == 7) { sym = "n"; }
+        else if (file == 3 || file == 6) { sym = "b"; }
+        else if (file == 4)              { sym = "q"; }
+        else if (file == 5)              { sym = "k"; }
         var col = new List<Piece>();
-        col.Add(new Piece(sym, C.White, new Place(file, 1)));
-        col.Add(new Piece(P.Pawn, C.White, new Place(file, 2)));
+        col.Add(PieceGen.Gen(sym, C.White, new Place(file, 1)));
+        col.Add(new Pawn(C.White, new Place(file, 2)));
         for (int rank = 3; rank <= 6; rank++)
         {
           col.Add(null);
         }
-        col.Add(new Piece(P.Pawn, C.Black, new Place(file, 7)));
-        col.Add(new Piece(sym, C.Black, new Place(file, 8)));
+        col.Add(new Pawn(C.Black, new Place(file, 7)));
+        col.Add(PieceGen.Gen(sym, C.Black, new Place(file, 8)));
         this.squares.Add(col);
       }
     }
@@ -38,6 +41,8 @@ namespace Chesss.Model
                  out List<Piece> blackPieces,
                  out List<Piece> whitePieces)
     {
+      Width = 8;
+      Height = 8;
       blackPieces = new List<Piece>();
       whitePieces = new List<Piece>();
       List<Piece> pieces;
@@ -49,10 +54,10 @@ namespace Chesss.Model
       }
 
       this.squares = new List<List<Piece>>();
-      for (int file = 1; file <= 8; file++)
+      for (int file = 1; file <= Width; file++)
       {
         var col = new List<Piece>();
-        for (int rank = 1; rank <= 8; rank++)
+        for (int rank = 1; rank <= Height; rank++)
         {
           col.Add(null);
         }
@@ -61,7 +66,7 @@ namespace Chesss.Model
 
       foreach (var piece in pieces)
       {
-        if (piece.Color() == C.Black)
+        if (piece.Color == C.Black)
         {
           blackPieces.Add(piece);
         }
@@ -69,20 +74,20 @@ namespace Chesss.Model
         {
           whitePieces.Add(piece);
         }
-        Set(piece.Place(), piece);
+        Set(piece.Place, piece);
       }
     }
 
     public Piece
     At(Place place)
     {
-      return this.squares[place.File() - 1][place.Rank() - 1];
+      return this.squares[place.File - 1][place.Rank - 1];
     }
 
     public void
     Set(Place place, Piece piece)
     {
-      this.squares[place.File() - 1][place.Rank() - 1] = piece;
+      this.squares[place.File - 1][place.Rank - 1] = piece;
     }
 
     public void
@@ -122,13 +127,13 @@ namespace Chesss.Model
 
       foreach (var piece in pieces)
       {
-        if (At(piece.Place()) != null)
+        if (At(piece.Place) != null)
         {
           Console.WriteLine("Not putting piece, {0} already occupied",
-                            piece.Place());
+                            piece.Place);
           continue;
         }
-        if (piece.Color() == C.Black)
+        if (piece.Color == C.Black)
         {
           blackPieces.Add(piece);
         }
@@ -136,7 +141,7 @@ namespace Chesss.Model
         {
           whitePieces.Add(piece);
         }
-        Set(piece.Place(), piece);
+        Set(piece.Place, piece);
       }
     }
   }

@@ -3,53 +3,39 @@ using System.Collections.Generic;
 
 namespace Chesss.Model
 {
-  public enum C
-  {
-    Black,
-    White
-  }
-
-  public enum P
-  {
-    Pawn,
-    King,
-    Queen,
-    Bishop,
-    Knight,
-    Rook
-  }
+  public enum C { Black, White }
 
   public class Game
   {
-    private Board board;
+    public Board Board { get; set; }
+    public C Turn { get; set; }
+    public List<string> Log { get; set; }
     private List<Piece> blackHand;
     private List<Piece> whiteHand;
     private List<Piece> blackCaptives;
     private List<Piece> whiteCaptives;
-    private C turn;
-    private int turns;
 
     public Game()
     {
-      this.board = new Board();
+      this.Board = new Board();
       this.blackCaptives = new List<Piece>();
       this.whiteCaptives = new List<Piece>();
-      this.turn = C.White;
-      this.turns = 0;
+      this.Turn = C.White;
+      this.Log = new List<string>();
       this.blackHand = new List<Piece>();
       this.whiteHand = new List<Piece>();
       for (int file = 1; file <= 8; file++)
       {
         for (int rank = 7; rank <= 8; rank++)
         {
-          blackHand.Add(board.At(new Place(file, rank)));
+          this.blackHand.Add(this.Board.At(new Place(file, rank)));
         }
       }
       for (int file = 1; file <= 8; file++)
       {
-        for (int rank = 2; rank <= 1; rank--)
+        for (int rank = 2; rank >= 1; rank--)
         {
-          whiteHand.Add(board.At(new Place(file, rank)));
+          this.whiteHand.Add(this.Board.At(new Place(file, rank)));
         }
       }
     }
@@ -59,19 +45,13 @@ namespace Chesss.Model
     {
       List<Piece> blackPieces;
       List<Piece> whitePieces;
-      this.board = new Board(strands, out blackPieces, out whitePieces);
+      this.Board = new Board(strands, out blackPieces, out whitePieces);
       this.blackHand = blackPieces;
       this.whiteHand = whitePieces;
       this.blackCaptives = new List<Piece>();
       this.whiteCaptives = new List<Piece>();
-      this.turn = C.White;
-      this.turns = 0;
-    }
-
-    public Board
-    Board()
-    {
-      return this.board;
+      this.Turn = C.White;
+      this.Log = new List<string>();
     }
 
     public List<Piece>
@@ -95,58 +75,46 @@ namespace Chesss.Model
     }
 
     public C
-    Turn()
-    {
-      return this.turn;
-    }
-
-    public C
     Other()
     {
-      if (this.turn == C.Black)
+      if (this.Turn == C.Black)
       {
         return C.White;
       }
       return C.Black;
     }
 
-    public int
-    Turns()
-    {
-      return this.turns;
-    }
-
     public Piece
     At(Place place)
     {
-      return this.board.At(place);
+      return this.Board.At(place);
     }
 
     public void
     Set(Place place, Piece piece)
     {
-      this.board.Set(place, piece);
+      this.Board.Set(place, piece);
     }
 
     public void
     Clear(Place place)
     {
       Piece piece = At(place);
-      blackHand.Remove(piece);
-      whiteHand.Remove(piece);
-      blackCaptives.Remove(piece);
-      whiteCaptives.Remove(piece);
-      this.board.Clear(place);
+      this.blackHand.Remove(piece);
+      this.whiteHand.Remove(piece);
+      this.blackCaptives.Remove(piece);
+      this.whiteCaptives.Remove(piece);
+      this.Board.Clear(place);
     }
 
     public void
     ClearAll()
     {
-      blackHand.Clear();
-      whiteHand.Clear();
-      blackCaptives.Clear();
-      whiteCaptives.Clear();
-      this.board.ClearAll();
+      this.blackHand.Clear();
+      this.whiteHand.Clear();
+      this.blackCaptives.Clear();
+      this.whiteCaptives.Clear();
+      this.Board.ClearAll();
     }
 
     // for testing
@@ -155,7 +123,7 @@ namespace Chesss.Model
     {
       List<Piece> blackPieces;
       List<Piece> whitePieces;
-      this.board.Put(strands, out blackPieces, out whitePieces);
+      this.Board.Put(strands, out blackPieces, out whitePieces);
       foreach (var piece in blackPieces)
       {
         this.blackHand.Add(piece);
@@ -169,13 +137,12 @@ namespace Chesss.Model
     public void
     Toggle()
     {
-      if (this.turn == C.Black)
+      if (this.Turn == C.Black)
       {
-        this.turn = C.White;
+        this.Turn = C.White;
         return;
       }
-      this.turn = C.Black;
-      this.turns++;
+      this.Turn = C.Black;
     }
   }
 }

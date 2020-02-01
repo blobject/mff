@@ -1,9 +1,9 @@
-// EXECUTION:
-// mono-csc ./*/*.cs ./Chesss.cs && mono Chesss.exe
+// EXECUTION (on linux):
+// mono-csc ./*/*.cs ./Chesss.cs -out:Chesss.exe && mono Chesss.exe
 
 using System;
-using Chesss.Model;
 using Chesss.Controller;
+using Chesss.Model;
 using Chesss.View;
 
 namespace Chesss
@@ -15,12 +15,8 @@ namespace Chesss
     {
       Game game = new Game();
       Move move = new Move(game);
-      Display display = new Display();
-
-      Place place = new Place(2, 4);
-      move.It(place, place.N());
-
-      Console.WriteLine(display);
+      Ui ui = new Ui(move);
+      ui.Run();
     }
   }
 }
