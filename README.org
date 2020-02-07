@@ -1,22 +1,22 @@
 * mff
 
 - nprg005 (non-procedural) ::
-  - *[[npp][npp]]*
-  - *[[lambda][lambda]]*
+  - *[[npp][npp]]* - exercises
+  - *[[lambda][lambda]]* - lambda-calculus interpreter (prolog)
 
 - nprg035 (c#) ::
   - *[[chesss][chesss]]*
   - *[[_exam_nprg035][exam]]* (2020 jan 27)
 
 - nprg041 (c++) ::
-  - *[[array][array]]*
-  - *[[ssharp][ssharp]]*: [[https://github.com/agarick/mff/tree/nprg041_ssharp_submit/ssharp][submit]]
-  - *[[deck][deck]]*
+  - *[[array][array]]* - data structure implementation
+  - *[[ssharp][ssharp]]*: [[https://github.com/agarick/mff/tree/nprg041_ssharp_submit/ssharp][submit]] - toy transpiler
+  - *[[deck][deck]]* - forth interpreter
   - *[[_exam_nprg041][exam]]* (2019 feb 05)
 
 - nprg045 (software project) ::
-  - *[[emergence][emergence]]*
+  - *[[emergence][emergence]]* - primordial particle system simulator
 
 - nswi015 (unix c) ::
-  - *[[mysh][mysh]]*: [[https://github.com/agarick/mff/tree/nswi015_mysh_phase1/mysh][phase1]], [[https://github.com/agarick/mff/tree/nswi015_mysh_phase2/mysh][phase2]]
+  - *[[mysh][mysh]]*: [[https://github.com/agarick/mff/tree/nswi015_mysh_phase1/mysh][phase1]], [[https://github.com/agarick/mff/tree/nswi015_mysh_phase2/mysh][phase2]] - toy shell
   - *[[_exam_nswi015][exam]]* (2019 feb 01)
