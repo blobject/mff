@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json;
 
-namespace Chesss.Model
+namespace Chesh.Model
 {
   public enum Color { None, Black, White }
 
@@ -32,6 +32,12 @@ namespace Chesss.Model
     ToJson()
     {
       return JsonSerializer.Serialize<Game>(this);
+    }
+
+    public void
+    Select(int x, int y)
+    {
+      this.State.Selection = this.State.At(x, y);
     }
 
     public void

@@ -5,7 +5,7 @@
   - *[[lambda][lambda]]* - lambda-calculus interpreter (prolog)
 
 - nprg035 (c#) ::
-  - *[[chesss][chesss]]*
+  - *[[chesh][chesh]]* - human-vs-human commandline chess game
   - *[[_exam_nprg035][exam]]* (2020 jan 27)
 
 - nprg041 (c++) ::
