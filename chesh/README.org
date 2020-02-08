@@ -1,0 +1,89 @@
+* chesh
+
+A basic human-vs-human chess game for the Windows/Linux console.
+
+Written in C#, hence the name.
+
+** Try
+
+*** Run
+
+- =./Chesh.exe=
+
+*** Build requirements
+
+- Windows
+  - latest .NET Core
+- Linux
+  - .NET Core 5.0 preview
+    - see: https://github.com/dotnet/runtime/issues/460#issuecomment-564514077
+    - see also: https://github.com/dotnet/core/issues/973
+
+*** Build & run
+
+| at root                                 | in =src/=          |
+|-----------------------------------------+--------------------|
+| =cd mff/chesh=                          | =cd mff/chesh/src= |
+| =dotnet run --project src/Chesh.csproj= | =dotnet run=       |
+
+*** Run unit tests
+
+| at root                              | in =test/=          |
+|--------------------------------------+---------------------|
+| =cd mff/chesh=                       | =cd mff/chesh/test= |
+| =dotnet test test/CheshTests.csproj= | =dotnet test=       |
+
+** How to use (play) Chesh
+
+- Chess game definition: https://en.wikipedia.org/wiki/Chess
+- Take turns:
+  - 2 Human players take turns playing.
+  - "White" goes first
+    - In ASCII-mode, White are the uppercase pieces, and Black are the lowercase.
+  - A player interacts with the program by pressing keys and typing in commands.
+    - =Escape=: Bring up the Paused menu
+    - =<command> Enter=: Make a move
+- Make moves:
+  - Move piece
+  - Propose to draw game
+  - Forfeit game
+- End game:
+  - Type =bye=, =exit=, =quit=, or =C-d= to quit.
+  - On checkmate, the game ends, and the user(s) can choose to save the game history.
+  - Quitting before checkmate will automatically save the game history.
+- Load game:
+  - Supply the executable with a filename argument to playback the saved game.
+  - Optionally supply an additional argument (in seconds) to specify the playback speed.
+    - ex: =./Chesh.exe saved/immortal.log 0.5=
+
+** The game screen
+
+** Developmental notes
+
+*** Classes
+
+- =Model.State= carries the minimal set of information needed to recreate the entire game.
+  - Plus an additional Board structure that a representation of all the =Piece= s, used as a utility device to compute move legality.
+  - Implements low-level mutators/accessors to this minimal data. Example:
+    - Convert to json string
+    - Select piece
+    - Move piece
+- =Model.Game= is a wrapper around =State= that implements high-level mutators to the latter and retains additional information needed for a complete game experience.
+- =Model.Piece= represents an individual chess piece.
+  - It has a "sym" (piece type), a color (black or white), location information, and whether it has moved at least once.
+  - Each piece has the ability to determine its reach (its set of legal moves).
+- =Controller.Control= is an interface between the =Model= and =View=.
+  - All user-mutation of =State= happens through =Control=, via direct function calls against =Game=.
+  - All user-access of =State= happens through =Control= via the observer pattern. =Control= observes changes in =State= and propagates behavior to =View=.
+- =View.Ui= is responsible for representing the game on the console screen and is a wrapper for individual =Element= s.
+- =View.Element= is a specific portion of the text-based UI, such as the board or the move history.
+
+*** MVC
+
+- =State= is the model.
+- =Control= is the controller.
+- =Ui= is the view.
+- State --> Control: via =.*Changed()=
+- Control --> (Game) --> State: via =Game.Move()=, etc.
+- Control --> View: via =.Change*()=
+- View --> Control: via =Control.Move()=, etc.

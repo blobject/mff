@@ -1,4 +1,5 @@
-*.exe
 *.dll
+*.exe
+/*.log
 bin/
 obj/
