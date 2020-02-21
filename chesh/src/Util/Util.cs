@@ -4,30 +4,44 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using Chesh.Model;
-using Chesh.View;
 
 namespace Chesh.Util
 {
+
+  // Helper: Various static helper methods used by other objects.
+
   public class Helper
   {
+
+    // FromJson: Convert a json object to string.
+
     public static object
     FromJson(string s)
     {
       return JsonSerializer.Deserialize<object>(s);
     }
 
+
+    // JsonToCfgValue: Get a key's value from a json object.
+
     public static string
-    FromJsonToCfgValue(string cfg, string key)
+    JsonToCfgValue(string cfg, string key)
     {
       return ((JsonElement) FromJson(cfg)).GetProperty(key).GetString();
     }
 
+
+    // JsonToStateListValue: Get a list value from a json object.
+
     public static IEnumerable<JsonElement>
-    FromJsonToStateListValue(string state, string key)
+    JsonToStateListValue(string state, string key)
     {
       return ((JsonElement) Helper.FromJson(state))
         .GetProperty(key).EnumerateArray();
     }
+
+
+    // ToJson: Convert an object to a serialised json string.
 
     public static string
     ToJson(object o)
@@ -39,11 +53,17 @@ namespace Chesh.Util
       return JsonSerializer.Serialize(o, options);
     }
 
+
+    // ToFileNum: Get the numeric value of a file.
+
     public static int
     ToFileNum(char file)
     {
       return (int) file - 'a' + 1;
     }
+
+
+    // ToRankNum: Get the numeric value of a rank.
 
     public static int
     ToRankNum(char rank)
@@ -51,70 +71,67 @@ namespace Chesh.Util
       return (int) char.GetNumericValue(rank);
     }
 
+
+    // ToFileChar: Get the alphabetic value of a file.
+
     public static char
     ToFileChar(int file)
     {
       return (char) (file + 'a' - 1);
     }
 
+
+    // SymToName: Translate piece sym to its name.
+
     public static string
-    FromSymToName(string sym)
+    SymToName(string sym)
     {
       if (sym == null)
       {
         return null;
       }
-      switch (sym)
+      switch (sym.ToUpper())
       {
-        case "o": case "P": return "Pawn";
-        case "r": case "R": return "Rook";
-        case "n": case "N": return "Knight";
-        case "b": case "B": return "Bishop";
-        case "q": case "Q": return "Queen";
-        case "k": case "K": return "King";
+        case "P": return "Pawn";
+        case "R": return "Rook";
+        case "N": return "Knight";
+        case "B": return "Bishop";
+        case "Q": return "Queen";
+        case "K": return "King";
         default: return null;
       }
     }
 
-    public static string
-    FromSymToAbbrev(string sym)
-    {
-      if (sym == null)
-      {
-        return null;
-      }
-      if (sym == "o")
-      {
-        return "P";
-      }
-      return sym.ToUpper();
-    }
+
+    // MoveToInts: Convert a move notation to numbers.
 
     public static (int,int,int,int)
-    FromMoveToInts(string move)
+    MoveToInts(string move)
     {
       return (ToFileNum(move[0]), ToRankNum(move[1]),
               ToFileNum(move[2]), ToRankNum(move[3]));
     }
 
+
+    // Notate: Create a notation from movement data.
+
     public static string
     Notate(List<Ret> rets,
-           string sym, string prom,
+           string sym, char prom,
            int xSrc, int ySrc,
            int xDst, int yDst)
     {
       char fileSrc = Helper.ToFileChar(xSrc);
       char fileDst = Helper.ToFileChar(xDst);
-      string abbrev = Helper.FromSymToAbbrev(sym);
-      string note = $"{abbrev}{fileSrc}{ySrc}{fileDst}{yDst}";
-      string suffix = "";
+      string note = $"{sym.ToUpper()}{fileSrc}{ySrc}{fileDst}{yDst}";
+      string suffix = string.Empty;
       if (rets.Count == 0)
       {
         return note;
       }
       if (rets.Contains(Ret.Promote))
       {
-        suffix += prom;
+        suffix += prom.ToString();
       }
       if (rets.Contains(Ret.Castle))
       {
@@ -151,6 +168,9 @@ namespace Chesh.Util
       return note + suffix;
     }
 
+
+    // Denotate: Extract just the move from a notation.
+
     public static string
     Denotate(string note)
     {
@@ -158,21 +178,32 @@ namespace Chesh.Util
       {
         return note;
       }
+      if (note == "tie")
+      {
+        return note;
+      }
       return Regex.Replace(note.Trim().Substring(1),
                            @"[*&#+:p%RNBQ]$", string.Empty);
     }
 
+
+    // ValidSquare: Determine whether the square is valid.
+
     public static bool
     ValidSquare(char file, char rank)
     {
-      int f = ToFileNum(file);
-      int r = ToRankNum(rank);
+      int f = ToFileNum(char.ToLower(file));
+      int r = ToRankNum(char.ToLower(rank));
       if (f < 1 || f > 8 || r < 1 || r > 8)
       {
         return false;
       }
       return true;
     }
+
+
+    // CanCapture: Determine whether an abbreviation can be captured.
+    //             State.Board consists only of abbreviations.
 
     public static bool
     CanCapture(Color color, char that)
@@ -187,18 +218,110 @@ namespace Chesh.Util
       }
       return false;
     }
+
+
+    // StrandsToPieces: Convert a string in shorthand notation to pieces.
+    //                      Used for testing purposes.
+    // shorthand notation: <color><sym><file><rank>, ex: bq41
+
+    public static List<Piece>
+    StrandsToPieces(string strands)
+    {
+      var pieces = new List<Piece>();
+      Color color;
+      string sym;
+      char f;
+      char r;
+      int file;
+      int rank;
+      Piece piece;
+      foreach (var strand in strands.ToLower().Split())
+      {
+        if (strand.Length != 4)
+        {
+          continue;
+        }
+
+        // color
+        if (char.ToLower(strand[0]) == 'b')
+        {
+          color = Color.Black;
+        }
+        else if (char.ToLower(strand[0]) == 'w')
+        {
+          color = Color.White;
+        }
+        else
+        {
+          continue;
+        }
+
+        // sym
+        sym = char.ToLower(strand[1]).ToString();
+        if (! Regex.IsMatch(sym, @"[prnbqk]"))
+        {
+          continue;
+        }
+
+        // square
+        f = strand[2];
+        r = strand[3];
+        if (! ValidSquare(f, r))
+        {
+          continue;
+        }
+        file = ToFileNum(char.ToLower(f));
+        rank = ToRankNum(char.ToLower(r));
+
+        // piece
+        piece = new Pawn(color, file, rank);
+        if (sym == "r")
+        {
+          piece = new Rook(color, file, rank);
+        }
+        else if (sym == "n")
+        {
+          piece = new Knight(color, file, rank);
+        }
+        else if (sym == "b")
+        {
+          piece = new Bishop(color, file, rank);
+        }
+        else if (sym == "q")
+        {
+          piece = new Queen(color, file, rank);
+        }
+        else if (sym == "k")
+        {
+          piece = new King(color, file, rank);
+        }
+
+        pieces.Add(piece);
+      }
+      return pieces;
+    }
   }
+
+
+  // ISubject: Observable interface.
 
   public interface ISubject
   {
     void Attach(IObserver observer);
     void StateChanged(State next);
+    void CfgChanged(Dictionary<string,string> next);
   }
 
+
+  // IObserver: Observer interface.
   public interface IObserver
   {
     void ChangeState(State next);
+    void ChangeCfg(Dictionary<string,string> next);
   }
+
+
+  // PieceConverter: Know how to convert a Piece object into json.
 
   public class PieceConverter : JsonConverter<Piece>
   {
@@ -231,6 +354,9 @@ namespace Chesh.Util
     }
   }
 
+
+  // HistoryConverter: Know how to convert the History object into json.
+
   public class HistoryConverter : JsonConverter<(string,long)>
   {
     public override (string,long)
@@ -253,6 +379,9 @@ namespace Chesh.Util
       writer.WriteEndArray();
     }
   }
+
+
+  // CfgConverter: Know how to convert the Cfg object into json.
 
   public class CfgConverter : JsonConverter<(string,string)>
   {

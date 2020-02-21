@@ -4,6 +4,9 @@ using Chesh.Util;
 
 namespace Chesh.Model
 {
+
+  // Piece: The object representing a movable chess piece.
+
   public abstract class Piece
   {
     public string Sym { get; set; }
@@ -16,19 +19,17 @@ namespace Chesh.Model
     {
       this.Sym = sym;
       this.Color = color;
+      if (color == Color.Black)
+      {
+        this.Sym = sym.ToLower();
+      }
       this.X = x;
       this.Y = y;
       this.Inert = true;
-      if (sym == "p" && color == Color.Black)
-      {
-        // pawn case disambiguation
-        this.Sym = "o";
-      }
-      if (color == Color.White)
-      {
-        this.Sym = sym.ToUpper();
-      }
     }
+
+
+    // Quicken: Claim that the piece has moved at least once.
 
     public void
     Quicken()
@@ -36,10 +37,24 @@ namespace Chesh.Model
       this.Inert = false;
     }
 
+
+    // Is: Convenience method to check piece type.
+
+    public static bool
+    Is(Piece piece, string name)
+    {
+      return piece.GetType().Name == name;
+    }
+
+
+    // Rays: Lists linear moves in all possible directions.
+
     public abstract List<List<(int,int,int,int)>>
     Rays(char[,] board, string last);
 
-    // basically flattens Rays()
+
+    // Reach: Flattened Rays.
+
     public virtual List<(int,int,int,int)>
     Reach(char[,] board, string last)
     {
@@ -51,14 +66,34 @@ namespace Chesh.Model
       return reach;
     }
 
+
+    // stub: implemented only by King
+    public virtual List<Ret>
+    Castle(State state, int x, int y, out int xMore, out int yMore)
+    {
+      xMore = 0;
+      yMore = 0;
+      return null;
+    }
+
+
+    // stub: implemented only by Pawn
+    public virtual List<(int,int,int,int)>
+    EnPassant(char[,] board, string last, int x, int y)
+    {
+      return null;
+    }
+
+
+    // Move: Move the piece.
+
     public List<Ret>
     Move(State state, int x, int y, out int xMore, out int yMore)
     {
       xMore = 0;
       yMore = 0;
-      string name = this.GetType().Name;
       var board = state.Board;
-      if (name == "King")
+      if (Is(this, "King"))
       {
         var rets = this.Castle(state, x, y, out xMore, out yMore);
         if (rets.Contains(Ret.Castle))
@@ -66,25 +101,17 @@ namespace Chesh.Model
           return rets;
         }
       }
-      string last = null;
-      if (name == "Pawn")
-      {
-        last = state.LastNote();
-      }
-      int xk;
-      int yk;
+      string last = state.LastNote();
       foreach (var swap in this.Reach(board, last))
       {
         if (swap.Item1 == x && swap.Item2 == y)
         {
-          xk = swap.Item3;
-          yk = swap.Item4;
-          if (xk > 0 && yk > 0 &&
-              Helper.CanCapture(this.Color, board[xk - 1, yk - 1]))
+          xMore = swap.Item3;
+          yMore = swap.Item4;
+          if (xMore > 0 && yMore > 0 &&
+              Helper.CanCapture(this.Color, board[xMore - 1, yMore - 1]))
           {
-            xMore = xk;
-            yMore = yk;
-            if (xk == x && yk == y)
+            if (xMore == x && yMore == y)
             {
               return new List<Ret>() { Ret.Capture };
             }
@@ -95,20 +122,45 @@ namespace Chesh.Model
       }
       return new List<Ret>() { Ret.InvalidMove };
     }
-
-    // stub: implemented only by King
-    public virtual List<Ret>
-    Castle(State state, int x, int y, out int xMore, out int yMore)
-    {
-      xMore = 0;
-      yMore = 0;
-      return null;
-    }
   }
 
   public class Pawn : Piece
   {
-    public Pawn(Color color, int x, int y) : base("p", color, x, y) {}
+    public Pawn(Color color, int x, int y) : base("P", color, x, y) {}
+
+
+    // EnPassant: Determine possibility of en passant moves.
+
+    public override List<(int,int,int,int)>
+    EnPassant(char[,] board, string last, int x, int y)
+    {
+      if (last != null && last[0] == 'P')
+      {
+        bool ep = false;
+        (int,int,int,int) enemy = Helper.MoveToInts(last.Substring(1));
+        if (this.Color == Color.Black)
+        {
+          if (x == enemy.Item1 && x == enemy.Item3 &&
+              2 == enemy.Item2 && 4 == enemy.Item4)
+          {
+            ep = true;
+          }
+        }
+        else
+        {
+          if (x == enemy.Item1 && x == enemy.Item3 &&
+              7 == enemy.Item2 && 5 == enemy.Item4)
+          {
+            ep = true;
+          }
+        }
+        if (ep && Helper.CanCapture(this.Color, board[x - 1, enemy.Item4 - 1]))
+        {
+          return new List<(int,int,int,int)>() { (x, y, x, enemy.Item4) };
+        }
+      }
+      return null;
+    }
 
     public override List<List<(int,int,int,int)>>
     Rays(char[,] board, string last)
@@ -116,8 +168,6 @@ namespace Chesh.Model
       var rays = new List<List<(int,int,int,int)>>();
       int x;
       int y;
-      bool enPassant;
-      (int,int,int,int) enemy;
 
       // advance one
       y = this.Y + 1;
@@ -135,6 +185,7 @@ namespace Chesh.Model
       }
 
       // capture
+      List<(int,int,int,int)> epSwap;
       x = this.X - 1;
       if (x >= 1)
       {
@@ -144,31 +195,10 @@ namespace Chesh.Model
         }
 
         // en passant
-        if (last != null && last[0] == 'P')
+        epSwap = this.EnPassant(board, last, x, y);
+        if (epSwap != null)
         {
-          enPassant = false;
-          enemy = Helper.FromMoveToInts(last.Substring(1));
-          if (this.Color == Color.Black)
-          {
-            if (x == enemy.Item1 && x == enemy.Item3 &&
-                2 == enemy.Item2 && 4 == enemy.Item4)
-            {
-              enPassant = true;
-            }
-          }
-          else
-          {
-            if (x == enemy.Item1 && x == enemy.Item3 &&
-                7 == enemy.Item2 && 5 == enemy.Item4)
-            {
-              enPassant = true;
-            }
-          }
-          if (enPassant &&
-              Helper.CanCapture(this.Color, board[x - 1, enemy.Item4 - 1]))
-          {
-            rays.Add(new List<(int,int,int,int)>() { (x, y, x, enemy.Item4) });
-          }
+          rays.Add(epSwap);
         }
       }
       x = this.X + 1;
@@ -180,31 +210,10 @@ namespace Chesh.Model
         }
 
         // en passant
-        if (last != null && last[0] == 'P')
+        epSwap = this.EnPassant(board, last, x, y);
+        if (epSwap != null)
         {
-          enPassant = false;
-          enemy = Helper.FromMoveToInts(last.Substring(1));
-          if (this.Color == Color.Black)
-          {
-            if (x == enemy.Item1 && x == enemy.Item3 &&
-                2 == enemy.Item2 && 4 == enemy.Item4)
-            {
-              enPassant = true;
-            }
-          }
-          else
-          {
-            if (x == enemy.Item1 && x == enemy.Item3 &&
-                7 == enemy.Item2 && 5 == enemy.Item4)
-            {
-              enPassant = true;
-            }
-          }
-          if (enPassant &&
-              Helper.CanCapture(this.Color, board[x - 1, enemy.Item4 - 1]))
-          {
-            rays.Add(new List<(int,int,int,int)>() { (x, y, x, enemy.Item4) });
-          }
+          rays.Add(epSwap);
         }
       }
 
@@ -233,10 +242,10 @@ namespace Chesh.Model
 
   public class Rook : Piece
   {
-    public Rook(Color color, int x, int y) : base("r", color, x, y) {}
+    public Rook(Color color, int x, int y) : base("R", color, x, y) {}
 
     public override List<List<(int,int,int,int)>>
-    Rays(char[,] board, string last)
+    Rays(char[,] board, string unused)
     {
       var rays = new List<List<(int,int,int,int)>>();
       int x;
@@ -305,10 +314,10 @@ namespace Chesh.Model
 
   public class Knight : Piece
   {
-    public Knight(Color color, int x, int y) : base("n", color, x, y) {}
+    public Knight(Color color, int x, int y) : base("N", color, x, y) {}
 
     public override List<List<(int,int,int,int)>>
-    Rays(char[,] board, string last)
+    Rays(char[,] board, string unused)
     {
       var rays = new List<List<(int,int,int,int)>>();
 
@@ -362,10 +371,10 @@ namespace Chesh.Model
 
   public class Bishop : Piece
   {
-    public Bishop(Color color, int x, int y) : base("b", color, x, y) {}
+    public Bishop(Color color, int x, int y) : base("B", color, x, y) {}
 
     public override List<List<(int,int,int,int)>>
-    Rays(char[,] board, string last)
+    Rays(char[,] board, string unused)
     {
       var rays = new List<List<(int,int,int,int)>>();
       int x;
@@ -446,10 +455,10 @@ namespace Chesh.Model
 
   public class Queen : Piece
   {
-    public Queen(Color color, int x, int y) : base("q", color, x, y) {}
+    public Queen(Color color, int x, int y) : base("Q", color, x, y) {}
 
     public override List<List<(int,int,int,int)>>
-    Rays(char[,] board, string last)
+    Rays(char[,] board, string unused)
     {
       var rays = new List<List<(int,int,int,int)>>();
       rays.AddRange((new Rook(this.Color, this.X, this.Y)).Rays(board, null));
@@ -460,10 +469,10 @@ namespace Chesh.Model
 
   public class King : Piece
   {
-    public King(Color color, int x, int y) : base("k", color, x, y) {}
+    public King(Color color, int x, int y) : base("K", color, x, y) {}
 
     public override List<List<(int,int,int,int)>>
-    Rays(char[,] board, string last)
+    Rays(char[,] board, string unsed)
     {
       var rays = new List<List<(int,int,int,int)>>();
 
@@ -497,6 +506,9 @@ namespace Chesh.Model
       return rays;
     }
 
+
+    // Castle: Determine possibility of castling moves.
+
     public override List<Ret>
     Castle(State state, int x, int y, out int xMore, out int yMore)
     {
@@ -516,27 +528,27 @@ namespace Chesh.Model
         return bad;
       }
       int xRook = 8;
-      if (x < 5)
+      if (x < 5) // queenside
       {
         xRook = 1;
       }
-      var rook = state.At(xRook, y);
-      if (rook == null || rook.GetType().Name != "Rook" || ! rook.Inert)
+      var rook = state.At(state.Live, xRook, y);
+      if (rook == null || ! Is(rook, "Rook") || ! rook.Inert)
       {
         return bad;
       }
 
-      // get ray from king to rook inclusive
+      // get ray from king to rook, inclusive
       var ray = new List<(int,int,int,int)>();
       var range = new[] { 6, 7 };
-      if (x < 5)
+      if (x < 5) // queenside
       {
         range = new[] { 4, 3, 2 };
       }
       ray.Add((this.X, y , this.X, y));
       foreach (var file in range)
       {
-        if (state.At(file, y) != null)
+        if (state.At(state.Live, file, y) != null)
         {
           return bad;
         }
