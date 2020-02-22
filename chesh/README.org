@@ -8,22 +8,25 @@ Written in C#, hence the name.
 
 *** Run
 
-- =./Chesh.exe=
+- Windows (x64)
+  1. Download [[pub/Chesh.exe]].
+  1. Double-click and play.
 
-With arguments:
-
-- =./Chesh.exe wide save/immortal.log .5=
-  - Starts a playback of the saved "immortal.log" game, in wide-mode, at the speed of 0.5 sec/move.
+- Linux
+  1. Build, as shown below.
+  1. Without arguments: =./Chesh.exe=
+  1. With arguments: =./Chesh.exe wide save/immortal.log .5=
+    - Starts playback of the saved "immortal.log" game, in wide-mode, at the speed of 0.5 sec/move.
 
 *** Build requirements
 
 - Windows
-  - latest .NET Core
-    - make sure to set the target framework to the latest stable .NET Core; an error might result from the "netcoreapp5.0" specification in the csproj file (which is there for Linux builds).
+  - Latest .NET Core
+    - Make sure to set the target framework to the latest stable .NET Core; an error might result from the "netcoreapp5.0" specification in the csproj file (which is there for Linux builds).
 - Linux
   - .NET Core 5.0 preview
-    - see: https://github.com/dotnet/runtime/issues/460#issuecomment-564514077
-    - see also: https://github.com/dotnet/core/issues/973
+    - See: https://github.com/dotnet/runtime/issues/460#issuecomment-564514077
+    - See also: https://github.com/dotnet/core/issues/973
 
 *** Build & run
 
@@ -78,7 +81,7 @@ With arguments:
 
 ** The game screen
 
-[[screenshot.png]]
+[[pub/screenshot.png]]
 
 Basically, two prompts for each player at the top and bottom, the history of moves at the left, and the board at the center right.
 
@@ -113,4 +116,4 @@ Basically, two prompts for each player at the top and bottom, the history of mov
 
 *** More info
 
-See [[chesh.pdf]].
+See [[pub/chesh.pdf][chesh.pdf]].
