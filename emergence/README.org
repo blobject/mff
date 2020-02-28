@@ -1,5 +1,7 @@
 * emergence
 
+*note: a new OpenGL implementation is at [[https://github.com/agarick/emergence]]*
+
 ** About
 
 *Emergence* is a visualiser/processor of a primordial particle system and its emergent/interactive properties.
@@ -175,7 +177,7 @@ The bulk of the functionality is implemented in four javascript files.
 
 The [[util.js][util.js]] file includes common or miscellaneous code snippets that do not belong to precisely one of the other files.
 
-- headlessness ::
+*** headlessness
 
 The entry point for the browser interface is =core.tick()=, and the entry point for the commandline interface is =headless.exec()=. The former function gets strapped onto the HTML timer mechanism (ie. via =setInterval=), but =headless.exec()= gets executed straight in a while loop.
 
@@ -183,7 +185,7 @@ The notion of "when to stop execution" is dealt with in and around the respectiv
 
 The ability to reuse one =core.js= file between the browser and the commandline is made possible with the nodejs javascript runtime. At the beginning of =core.js=, the file checks whether it was called by a browser or by the nodejs interpreter, and in the case of the latter, a call to =headless.exec()= is made.
 
-- data & state ::
+*** data & state
 
 =core.js= defines a central data store (in the form of global variables).
 
@@ -192,7 +194,7 @@ The ability to reuse one =core.js= file between the browser and the commandline 
 - =WORLD= and =STATE= are objects that contain information that particles need in order to exist, move, and get drawn. The two variables have basically the same kind and purpose, except for the fact that =STATE= gets saved and loaded, whereas =WORLD= does not. To put it another way, =STATE= represents the core information that the program needs in order to recreate that entire world again, for any of the user interfaces.
 - Internally, the state data is passed around as javascript objects, but to the user, state is represented by a multiline string. The format of the string has been dealt with in "Usage" above.
 
-- history ::
+*** history
 
 - The state snapshot history is synchronised with the slider in the browser interface.
 - The method of updating the history is outlined in comments in the source, but will be briefly mentioned here.
@@ -200,7 +202,7 @@ The ability to reuse one =core.js= file between the browser and the commandline 
   - First of all, an interval size (= 100 ticks) is fixed. For the first interval (ie. the first 100 ticks), the actual snapshot sequence (or "history proper") gets filled. For every subsequent interval, only the buffer gets filled. And at each checkpoint, the buffer gets merged into the history proper, and the buffer index is reset to zero. Then this process repeats.
   - The method of merging the buffer into the history proper is a lossy and logarithmic one. The two sequences each get squashed into half their size, and the new history proper becomes the squashed old history proper concatenated with the squashed buffer.
 
-- color ::
+*** color
 
 - Coloring is achieved by a single formula defined in =bridge.hue()=: =((neighbors * 60 / density) + offset) mod 360=. "Offset" is a shift in hue to make the particles look nice on different background colors.
 
