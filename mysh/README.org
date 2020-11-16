@@ -17,23 +17,23 @@ build dependencies: make, clang, libedit
 
 - code structure ::
   - outline
-    1. mysh starts: [[https://github.com/agarick/mff/blob/master/mysh/src/main.c#L14][main()]]
-    2. "mode" of the shell is determined: [[https://github.com/agarick/mff/blob/master/mysh/src/main.c#L14][main()]], [[https://github.com/agarick/mff/blob/master/mysh/src/repl.c#L91][opt()]], [[https://github.com/agarick/mff/blob/master/mysh/src/repl.c#L278][loop()]]
-    3. repl starts: [[https://github.com/agarick/mff/blob/master/mysh/src/repl.c#L278][loop()]], [[https://github.com/agarick/mff/blob/master/mysh/src/repl.c#L205][loop_body()]]
-    4. input is read, variation depending on mode: [[https://github.com/agarick/mff/blob/master/mysh/src/repl.c#L278][loop()]], [[https://github.com/agarick/mff/blob/master/mysh/src/repl.c#L120][get()]]
-    5. read input is parsed into tokens: [[https://github.com/agarick/mff/blob/master/mysh/src/parse.c#L310][parse()]]
-    6. tokens are evaluated: [[https://github.com/agarick/mff/blob/master/mysh/src/parse.c#L475][eval()]]
-    7. commands are spawned: [[https://github.com/agarick/mff/blob/master/mysh/src/parse.c#L346][spawn()]]
-    8. next iteration of repl is readied: [[https://github.com/agarick/mff/blob/master/mysh/src/repl.c#L150][rinse()]]
+    1. mysh starts: [[https://github.com/blobject/mff/blob/master/mysh/src/main.c#L14][main()]]
+    2. "mode" of the shell is determined: [[https://github.com/blobject/mff/blob/master/mysh/src/main.c#L14][main()]], [[https://github.com/blobject/mff/blob/master/mysh/src/repl.c#L91][opt()]], [[https://github.com/blobject/mff/blob/master/mysh/src/repl.c#L278][loop()]]
+    3. repl starts: [[https://github.com/blobject/mff/blob/master/mysh/src/repl.c#L278][loop()]], [[https://github.com/blobject/mff/blob/master/mysh/src/repl.c#L205][loop_body()]]
+    4. input is read, variation depending on mode: [[https://github.com/blobject/mff/blob/master/mysh/src/repl.c#L278][loop()]], [[https://github.com/blobject/mff/blob/master/mysh/src/repl.c#L120][get()]]
+    5. read input is parsed into tokens: [[https://github.com/blobject/mff/blob/master/mysh/src/parse.c#L310][parse()]]
+    6. tokens are evaluated: [[https://github.com/blobject/mff/blob/master/mysh/src/parse.c#L475][eval()]]
+    7. commands are spawned: [[https://github.com/blobject/mff/blob/master/mysh/src/parse.c#L346][spawn()]]
+    8. next iteration of repl is readied: [[https://github.com/blobject/mff/blob/master/mysh/src/repl.c#L150][rinse()]]
   - data
-    - [[https://github.com/agarick/mff/blob/master/mysh/src/mysh.h#L40][line -> semi -> cmd -> word -> token]]
+    - [[https://github.com/blobject/mff/blob/master/mysh/src/mysh.h#L40][line -> semi -> cmd -> word -> token]]
       - where "line" and "token" are strings and the structs between them are TAILQs.
       - the "->" refers not to actual membership but to a "conceptual" membership -- ie. from a "line" we get "semis" and each "semi" contains "cmds", etc.
-    - the populating of semis, cmds, and words are done through [[https://github.com/agarick/mff/blob/master/mysh/src/parse.c#L327][nested string splitting]].
+    - the populating of semis, cmds, and words are done through [[https://github.com/blobject/mff/blob/master/mysh/src/parse.c#L327][nested string splitting]].
   - redirecting
-    - [[https://github.com/agarick/mff/blob/master/mysh/src/util.c#L64][chop off]] any trailing substrings that [[https://github.com/agarick/mff/blob/master/mysh/src/parse.c#L583][look redirectible]], and [[https://github.com/agarick/mff/blob/master/mysh/src/parse.c#L166][behave accordingly]].
+    - [[https://github.com/blobject/mff/blob/master/mysh/src/util.c#L64][chop off]] any trailing substrings that [[https://github.com/blobject/mff/blob/master/mysh/src/parse.c#L583][look redirectible]], and [[https://github.com/blobject/mff/blob/master/mysh/src/parse.c#L166][behave accordingly]].
   - piping
-    - each spawn is [[https://github.com/agarick/mff/blob/master/mysh/src/parse.c#L351][given parameters]] describing [[https://github.com/agarick/mff/blob/master/mysh/src/parse.c#L550][its place in]] the pipeline.
+    - each spawn is [[https://github.com/blobject/mff/blob/master/mysh/src/parse.c#L351][given parameters]] describing [[https://github.com/blobject/mff/blob/master/mysh/src/parse.c#L550][its place in]] the pipeline.
   - files
     - *makefile* - for =make ...=
     - src/ *main.c* - main function as entry point into *mysh*
@@ -52,46 +52,46 @@ build dependencies: make, clang, libedit
   - testing: MinUnit "framework"
 
 - phase 1 requirements ::
-  - due 13 jan 2019 (*[[https://github.com/agarick/mff/tree/nswi015_mysh_phase1/mysh][phase1 branch]]* frozen @ 13 jan 2019 [[https://github.com/agarick/mff/commit/5baf9218b5a2a9709ebd8f2e7ba0108518b465e9][5baf9218b5]])
-  - :-D [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L358][honor PATH of parent shell]]
-  - :-| [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L457][handle ^C to kill foreground process]] (requires 2 ^C's)
-  - :-D [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L214][handle empty input lines]]
-  - :-D impl. simple foreground execution: ([[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L226][parse()]], [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L309][eval()]])
-  - :-D handle semicolon syntax: ([[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L242][syntactic check]], [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L266][parsing]])
-  - :-D [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L218][impl. exit]]
-  - :-D [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L209][handle ^D]]
-  - :-D [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L126][impl. cd]]
-  - :-D [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/main.c#L31][handle -c option mode]]
-  - :-D [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L259][handle comments]]
-  - :-D [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/main.c#L37][impl. non-interactive (ie. file) mode]]
-  - :-D [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L28][yield return value of last command executed]]
-  - :-D [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.h#L23][return value of unknown command is 127]]
-  - :-D [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.h#L12][direct err/warn messages to stderr]]
+  - due 13 jan 2019 (*[[https://github.com/blobject/mff/tree/nswi015_mysh_phase1/mysh][phase1 branch]]* frozen @ 13 jan 2019 [[https://github.com/blobject/mff/commit/5baf9218b5a2a9709ebd8f2e7ba0108518b465e9][5baf9218b5]])
+  - :-D [[https://github.com/blobject/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L358][honor PATH of parent shell]]
+  - :-| [[https://github.com/blobject/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L457][handle ^C to kill foreground process]] (requires 2 ^C's)
+  - :-D [[https://github.com/blobject/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L214][handle empty input lines]]
+  - :-D impl. simple foreground execution: ([[https://github.com/blobject/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L226][parse()]], [[https://github.com/blobject/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L309][eval()]])
+  - :-D handle semicolon syntax: ([[https://github.com/blobject/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L242][syntactic check]], [[https://github.com/blobject/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L266][parsing]])
+  - :-D [[https://github.com/blobject/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L218][impl. exit]]
+  - :-D [[https://github.com/blobject/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L209][handle ^D]]
+  - :-D [[https://github.com/blobject/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L126][impl. cd]]
+  - :-D [[https://github.com/blobject/mff/blob/nswi015_mysh_phase1/mysh/main.c#L31][handle -c option mode]]
+  - :-D [[https://github.com/blobject/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L259][handle comments]]
+  - :-D [[https://github.com/blobject/mff/blob/nswi015_mysh_phase1/mysh/main.c#L37][impl. non-interactive (ie. file) mode]]
+  - :-D [[https://github.com/blobject/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L28][yield return value of last command executed]]
+  - :-D [[https://github.com/blobject/mff/blob/nswi015_mysh_phase1/mysh/mysh.h#L23][return value of unknown command is 127]]
+  - :-D [[https://github.com/blobject/mff/blob/nswi015_mysh_phase1/mysh/mysh.h#L12][direct err/warn messages to stderr]]
   - :-( return value of signalled command is 128
-  - :-D [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L97][show cwd in prompt]]
-  - :-D do not use fopen() family functions: ([[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L504][read()]], [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L202][el_gets()]])
-  - :-D do not use functions that [[https://github.com/agarick/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L350][fork()]] within
+  - :-D [[https://github.com/blobject/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L97][show cwd in prompt]]
+  - :-D do not use fopen() family functions: ([[https://github.com/blobject/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L504][read()]], [[https://github.com/blobject/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L202][el_gets()]])
+  - :-D do not use functions that [[https://github.com/blobject/mff/blob/nswi015_mysh_phase1/mysh/mysh.c#L350][fork()]] within
   - :-D should work on lab computers (but tests fail)
   - :-( check for mm issues using valgrind (libcursesw, libedit giving trouble)
 
 - phase 1 post hoc ::
-  - :-D [[https://github.com/agarick/mff/blob/nswi015_mysh_phase2/mysh/src/parse.c#L304][handle ^C to kill foreground process]]
-  - :-D [[https://github.com/agarick/mff/blob/nswi015_mysh_phase2/mysh/src/parse.c#L312][return value of signaled command is 128]]
+  - :-D [[https://github.com/blobject/mff/blob/nswi015_mysh_phase2/mysh/src/parse.c#L304][handle ^C to kill foreground process]]
+  - :-D [[https://github.com/blobject/mff/blob/nswi015_mysh_phase2/mysh/src/parse.c#L312][return value of signaled command is 128]]
   - :-|: check for mm issues using valgrind (no errors by mysh, but many errors by libedit and libncursesw)
-  - :-D various issues (see github [[https://github.com/agarick/mff/issues/3][#3]], [[https://github.com/agarick/mff/issues/9][#9]], [[https://github.com/agarick/mff/issues/10][#10]], [[https://github.com/agarick/mff/issues/11][#11]], [[https://github.com/agarick/mff/issues/12][#12]])
+  - :-D various issues (see github [[https://github.com/blobject/mff/issues/3][#3]], [[https://github.com/blobject/mff/issues/9][#9]], [[https://github.com/blobject/mff/issues/10][#10]], [[https://github.com/blobject/mff/issues/11][#11]], [[https://github.com/blobject/mff/issues/12][#12]])
 
 - phase 2 requirements ::
-  - due 30 jun 2019 (*[[https://github.com/agarick/mff/tree/nswi015_mysh_phase2/mysh][phase2 branch]]* frozen @ 11 apr 2019 [[https://github.com/agarick/mff/commit/e6046719f1707f46fc9a895a00a1697152d14e72][e6046719f1]])
-  - :-D [[https://github.com/agarick/mff/blob/nswi015_mysh_phase2/mysh/src/parse.c#L349][implement pipes]]
-  - :-D [[https://github.com/agarick/mff/blob/nswi015_mysh_phase2/mysh/src/parse.c#L199][pipes limited only by machine resources]]
-  - :-D [[https://github.com/agarick/mff/blob/nswi015_mysh_phase2/mysh/src/parse.c#L233][pipes can be separated by a semicolon]]
-  - :-D [[https://github.com/agarick/mff/blob/nswi015_mysh_phase2/mysh/src/parse.c#L416][wait for all commands in pipeline to finish before printing next prompt]]
-  - :-D [[https://github.com/agarick/mff/blob/nswi015_mysh_phase2/mysh/src/parse.c#L152][implement redirection]]: =>=, =<=, =>>=
-  - :-D [[https://github.com/agarick/mff/blob/nswi015_mysh_phase2/mysh/src/parse.c#L599][whitespace not significant in redirection]]
-  - :-D [[https://github.com/agarick/mff/blob/nswi015_mysh_phase2/mysh/src/parse.c#L595][can assume redirection occurs always at the end (last file considered when redundant)]]
-  - :-D [[https://github.com/agarick/mff/blob/nswi015_mysh_phase2/mysh/src/parse.c#L178][redirection "after" piping]]
+  - due 30 jun 2019 (*[[https://github.com/blobject/mff/tree/nswi015_mysh_phase2/mysh][phase2 branch]]* frozen @ 11 apr 2019 [[https://github.com/blobject/mff/commit/e6046719f1707f46fc9a895a00a1697152d14e72][e6046719f1]])
+  - :-D [[https://github.com/blobject/mff/blob/nswi015_mysh_phase2/mysh/src/parse.c#L349][implement pipes]]
+  - :-D [[https://github.com/blobject/mff/blob/nswi015_mysh_phase2/mysh/src/parse.c#L199][pipes limited only by machine resources]]
+  - :-D [[https://github.com/blobject/mff/blob/nswi015_mysh_phase2/mysh/src/parse.c#L233][pipes can be separated by a semicolon]]
+  - :-D [[https://github.com/blobject/mff/blob/nswi015_mysh_phase2/mysh/src/parse.c#L416][wait for all commands in pipeline to finish before printing next prompt]]
+  - :-D [[https://github.com/blobject/mff/blob/nswi015_mysh_phase2/mysh/src/parse.c#L152][implement redirection]]: =>=, =<=, =>>=
+  - :-D [[https://github.com/blobject/mff/blob/nswi015_mysh_phase2/mysh/src/parse.c#L599][whitespace not significant in redirection]]
+  - :-D [[https://github.com/blobject/mff/blob/nswi015_mysh_phase2/mysh/src/parse.c#L595][can assume redirection occurs always at the end (last file considered when redundant)]]
+  - :-D [[https://github.com/blobject/mff/blob/nswi015_mysh_phase2/mysh/src/parse.c#L178][redirection "after" piping]]
 
 - phase 2 more ::
-  - :-D github [[https://github.com/agarick/mff/issues/2][#2]]
+  - :-D github [[https://github.com/blobject/mff/issues/2][#2]]
   - :-S unit testing (too many things to test a posteriori, gave up)
-  - :-D various issues (see github [[https://github.com/agarick/mff/issues/13][#13]], [[https://github.com/agarick/mff/issues/14][#14]], [[https://github.com/agarick/mff/issues/15][#15]], [[https://github.com/agarick/mff/issues/16][#16]], [[https://github.com/agarick/mff/issues/17][#17]], [[https://github.com/agarick/mff/issues/18][#18]], [[https://github.com/agarick/mff/issues/19][#19]])
+  - :-D various issues (see github [[https://github.com/blobject/mff/issues/13][#13]], [[https://github.com/blobject/mff/issues/14][#14]], [[https://github.com/blobject/mff/issues/15][#15]], [[https://github.com/blobject/mff/issues/16][#16]], [[https://github.com/blobject/mff/issues/17][#17]], [[https://github.com/blobject/mff/issues/18][#18]], [[https://github.com/blobject/mff/issues/19][#19]])

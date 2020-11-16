@@ -9,18 +9,18 @@ toy ("S#") syntax to c-syntax transpilation
     - gives no output
       - must complete parsing first
     - does not recognise user input
-      - only recognises [[https://github.com/agarick/mff/blob/nprg041_ssharp_submit/ssharp/main.cpp#L825]["test" variable]] in main()
+      - only recognises [[https://github.com/blobject/mff/blob/nprg041_ssharp_submit/ssharp/main.cpp#L825]["test" variable]] in main()
   - documentation (comments) is not polished and somewhat haphazard
   - no automated testing implemented
-  - at time of submission, *[[https://github.com/agarick/mff/tree/nprg041_ssharp_submit/ssharp][submit branch]]* frozen @ 05 jan 2019, [[https://github.com/agarick/mff/commit/71085a6385ee4fb24b8f160a65bbbf368f6ab7b2][71085a6385]]
+  - at time of submission, *[[https://github.com/blobject/mff/tree/nprg041_ssharp_submit/ssharp][submit branch]]* frozen @ 05 jan 2019, [[https://github.com/blobject/mff/commit/71085a6385ee4fb24b8f160a65bbbf368f6ab7b2][71085a6385]]
 
 - code structure ::
   - outline
-    1. transpile starts: [[https://github.com/agarick/mff/blob/nprg041_ssharp_submit/ssharp/main.cpp#L734][init()]], [[https://github.com/agarick/mff/blob/nprg041_ssharp_submit/ssharp/main.cpp#L822][main()]], [[https://github.com/agarick/mff/blob/nprg041_ssharp_submit/ssharp/main.cpp#L825]["test" string]]
-    1. test string is lexed: [[https://github.com/agarick/mff/blob/nprg041_ssharp_submit/ssharp/main.cpp#L236][lex()]]
-    1. lexed tokens are parsed: [[https://github.com/agarick/mff/blob/nprg041_ssharp_submit/ssharp/main.cpp#L688][parse()]]
-    1. parse() refers to [[https://github.com/agarick/mff/blob/nprg041_ssharp_submit/ssharp/main.cpp#L365][various parse_*()]], the results of which accumulate in [[https://github.com/agarick/mff/blob/nprg041_ssharp_submit/ssharp/main.cpp#L320][a global variable]].
-    1. the global accumulation variable is traversed and printed accordingly: [[https://github.com/agarick/mff/blob/nprg041_ssharp_submit/ssharp/main.cpp#L719][out()]]
+    1. transpile starts: [[https://github.com/blobject/mff/blob/nprg041_ssharp_submit/ssharp/main.cpp#L734][init()]], [[https://github.com/blobject/mff/blob/nprg041_ssharp_submit/ssharp/main.cpp#L822][main()]], [[https://github.com/blobject/mff/blob/nprg041_ssharp_submit/ssharp/main.cpp#L825]["test" string]]
+    1. test string is lexed: [[https://github.com/blobject/mff/blob/nprg041_ssharp_submit/ssharp/main.cpp#L236][lex()]]
+    1. lexed tokens are parsed: [[https://github.com/blobject/mff/blob/nprg041_ssharp_submit/ssharp/main.cpp#L688][parse()]]
+    1. parse() refers to [[https://github.com/blobject/mff/blob/nprg041_ssharp_submit/ssharp/main.cpp#L365][various parse_*()]], the results of which accumulate in [[https://github.com/blobject/mff/blob/nprg041_ssharp_submit/ssharp/main.cpp#L320][a global variable]].
+    1. the global accumulation variable is traversed and printed accordingly: [[https://github.com/blobject/mff/blob/nprg041_ssharp_submit/ssharp/main.cpp#L719][out()]]
   - *.(/mff/ssharp)/makefile*
     - first =cd mff/ssharp=
     - build: =make=
@@ -31,5 +31,5 @@ toy ("S#") syntax to c-syntax transpilation
 
 - further implementation notes ::
   - a recursive descent parser has been attempted
-  - the [[https://github.com/agarick/mff/blob/nprg041_ssharp_submit/ssharp/main.cpp#L776][Transpiler.grammar variable]] does not work as intended; it aims to inform a main recursive "parsing" function, but currently, the "grammar" has instead been hardcoded into the parse_*() functions.
-  - please use the [[https://github.com/agarick/mff/blob/nprg041_ssharp_submit/ssharp/main.cpp#L24][DEBUG macro]] and the [[https://github.com/agarick/mff/blob/nprg041_ssharp_submit/ssharp/main.cpp#L825][test string]] to try out the incomplete transpiler.
+  - the [[https://github.com/blobject/mff/blob/nprg041_ssharp_submit/ssharp/main.cpp#L776][Transpiler.grammar variable]] does not work as intended; it aims to inform a main recursive "parsing" function, but currently, the "grammar" has instead been hardcoded into the parse_*() functions.
+  - please use the [[https://github.com/blobject/mff/blob/nprg041_ssharp_submit/ssharp/main.cpp#L24][DEBUG macro]] and the [[https://github.com/blobject/mff/blob/nprg041_ssharp_submit/ssharp/main.cpp#L825][test string]] to try out the incomplete transpiler.

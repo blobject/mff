@@ -5,7 +5,7 @@ A basic FORTH interpreter in C++.
 ** Try
 
 First ...:
-- clone https://github.com/agarick/mff (or download zip, etc.)
+- clone https://github.com/blobject/mff (or download zip, etc.)
 - =cd mff/deck=
 
 ... then build:

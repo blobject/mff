@@ -10,7 +10,7 @@
 
 - nprg041 (c++) ::
   - *[[array][array]]* - data structure implementation
-  - *[[ssharp][ssharp]]*: [[https://github.com/agarick/mff/tree/nprg041_ssharp_submit/ssharp][submit]] - toy transpiler
+  - *[[ssharp][ssharp]]*: [[https://github.com/blobject/mff/tree/nprg041_ssharp_submit/ssharp][submit]] - toy transpiler
   - *[[deck][deck]]* - forth interpreter
   - *[[_exam_nprg041][exam]]* (2019 feb 05)
 
@@ -18,5 +18,5 @@
   - *[[emergence][emergence]]* - primordial particle system simulator
 
 - nswi015 (unix c) ::
-  - *[[mysh][mysh]]*: [[https://github.com/agarick/mff/tree/nswi015_mysh_phase1/mysh][phase1]], [[https://github.com/agarick/mff/tree/nswi015_mysh_phase2/mysh][phase2]] - toy shell
+  - *[[mysh][mysh]]*: [[https://github.com/blobject/mff/tree/nswi015_mysh_phase1/mysh][phase1]], [[https://github.com/blobject/mff/tree/nswi015_mysh_phase2/mysh][phase2]] - toy shell
   - *[[_exam_nswi015][exam]]* (2019 feb 01)

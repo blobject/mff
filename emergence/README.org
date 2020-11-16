@@ -1,6 +1,6 @@
 * emergence
 
-*note: a new OpenGL implementation is at [[https://github.com/agarick/emergence]]*
+*note: a new OpenGL implementation is at [[https://github.com/blobject/emergence]]*
 
 ** About
 
