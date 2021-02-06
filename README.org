@@ -1,5 +1,8 @@
 * mff
 
+- npgr003 (graphics) ::
+  - *[[gr][gr]]* - a video output
+
 - nprg005 (non-procedural) ::
   - *[[npp][npp]]* - exercises
   - *[[lambda][lambda]]* - lambda-calculus interpreter (prolog)
@@ -15,7 +18,7 @@
   - *[[_exam_nprg041][exam]]* (2019 feb 05)
 
 - nprg045 (software project) ::
-  - *[[emergence][emergence]]* - primordial particle system simulator
+  - *[[emergence][emergence]]* - primordial particle system simulator (javascript)
 
 - nswi015 (unix c) ::
   - *[[mysh][mysh]]*: [[https://github.com/blobject/mff/tree/nswi015_mysh_phase1/mysh][phase1]], [[https://github.com/blobject/mff/tree/nswi015_mysh_phase2/mysh][phase2]] - toy shell
